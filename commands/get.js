@@ -5,6 +5,8 @@ const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 
+const t = require('./theme');
+
 function download(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
@@ -31,7 +33,7 @@ function download(url, dest) {
         downloaded += chunk.length;
         if (total) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          process.stdout.write(`\r  ${chalk.dim('Downloading...')} ${chalk.cyan(pct + '%')}`);
+          process.stdout.write(`\r  ${t.retroDim('▼')} ${t.retro(pct + '%')}`);
         }
       });
 
@@ -52,12 +54,14 @@ function download(url, dest) {
 
 async function install(name, project) {
   console.log();
-  console.log(chalk.bold(`  Installing ${chalk.cyan(project.name || name)}...`));
+  console.log(t.retroDim('  ─────────────────────────────'));
+  console.log(t.retro(`  Installing ${t.retroAccent(project.name || name)}`));
+  console.log(t.retroDim('  ─────────────────────────────'));
   console.log();
 
   const version = project.version || 'latest';
-  console.log(chalk.dim(`  Version: ${version}`));
-  console.log(chalk.dim(`  Repo: ${project.repo || 'N/A'}`));
+  console.log(t.retroDim(`  Version: ${t.retro(version)}`));
+  console.log(t.retroDim(`  Repo: ${t.retro(project.repo || 'N/A')}`));
   console.log();
 
   if (project.install) {
@@ -70,7 +74,7 @@ async function install(name, project) {
 
     try {
       await download(project.download, dest);
-      console.log(`  ${chalk.green('✓')} Saved to ${chalk.cyan(dest)}`);
+      console.log(`  ${t.retro('✓')} ${t.retroDim('Saved to')} ${t.retroAccent(dest)}`);
 
       if (project.postInstall) {
         project.postInstall(dest);
@@ -83,12 +87,12 @@ async function install(name, project) {
 
   if (project.info) {
     console.log();
-    console.log(chalk.dim('  ─── Info ───'));
+    console.log(t.retroDim('  ─── Info ───'));
     console.log(project.info.trim().split('\n').map(l => `  ${l}`).join('\n'));
   }
 
   console.log();
-  console.log(`  ${chalk.green('Done.')}`);
+  console.log(t.retro('  ✔ Done.'));
   console.log();
 }
 

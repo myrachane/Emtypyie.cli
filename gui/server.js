@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const t = require('../commands/theme');
+
 const PORT = 3000;
 const HOST = '127.0.0.1';
 
@@ -90,11 +92,14 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   const url = `http://${HOST}:${PORT}`;
-  console.log(`EMTYPYIE GUI running at ${url}`);
+  console.log(t.retro('  ─────────────────────────────'));
+  console.log(t.retro('  EMTYPYIE GUI'));
+  console.log(t.retroDim(`  ${url}`));
+  console.log(t.retro('  ─────────────────────────────'));
 
   try {
     execSync(`start ${url}`, { stdio: 'ignore' });
   } catch (_) {}
 
-  console.log('Press Ctrl+C to stop');
+  console.log(t.retroDim('  Press Ctrl+C to stop'));
 });
