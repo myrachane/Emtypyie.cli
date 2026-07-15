@@ -7,6 +7,7 @@ const project = {
   description: 'Custom QR Code Generator with full styling',
   download: 'https://github.com/myrachane/QRkRAFT/releases/download/v1.01/QR.KRAFT.Setup.1.0.1.exe',
   filename: 'QR.KRAFT.Setup.1.0.1.exe',
+  run: 'QR KRAFT\\QR KRAFT.exe',
   postInstall: (dest) => {
     console.log(`  ${chalk.dim('Run the installer to set up QR KRAFT.')}`);
   },

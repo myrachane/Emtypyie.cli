@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache pkg binaries
+        id: cache-pkg
+        uses: actions/cache@v4
+        with:
+          path: ~\.pkg-cache
+          key: pkg-cache-${{ runner.os }}
+
+      - run: npm ci
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build standalone executable
+        run: npm run build
+
+      - name: Package ZIP
+        shell: bash
+        run: |
+          cd dist
+          zip emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip emtypyie.exe
+          sha256sum emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip > emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip.sha256
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: v${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/emtypyie.exe
+            dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip
+            dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip.sha256
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-winget:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download wingetcreate
+        run: Invoke-WebRequest -Uri "https://aka.ms/wingetcreate/latest" -OutFile "wingetcreate.exe"
+
+      - name: Submit update to winget-pkgs
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.WINGETCREATE_TOKEN }}
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $installerUrl = "https://github.com/myrachane/emtypyie-cli/releases/download/v$version/emtypyie-cli-windows-x64-$version.zip"
+          .\wingetcreate.exe update myrachane.emtypyie-cli --version $version --urls $installerUrl --submit --token $env:GITHUB_TOKEN
