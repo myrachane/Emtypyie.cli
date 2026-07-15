@@ -291,6 +291,10 @@ async function doIssue(arg) {
 function runProject(name, proj) {
   if (proj.run) {
     const runPath = path.resolve(t.getDevDir(name), proj.run);
+    if (!fs.existsSync(runPath)) {
+      console.log(t.retroErr(`  "${proj.name || name}" not installed yet. Run /get ${name} first, then run the installer.`));
+      return;
+    }
     console.log(t.retro(`  Launching ${t.retroAccent(proj.name || name)}...`));
     execSync(`start "" "${runPath}"`, { stdio: 'ignore' });
     return;
