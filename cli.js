@@ -1,46 +1,44 @@
 #!/usr/bin/env node
 
 const readline = require('readline');
-const gradient = require('gradient-string');
 const chalk = require('chalk');
 const getCommand = require('./commands/get');
 const helpCommand = require('./commands/help');
 
 const BANNER = `
-  ███████╗███╗   ███╗████████╗██╗██╗   ██╗██████╗ ██╗███████╗
-  ██╔════╝████╗ ████║╚══██╔══╝██║╚██╗ ██╔╝██╔══██╗██║██╔════╝
-  █████╗  ██╔████╔██║   ██║   ██║ ╚████╔╝ ██████╔╝██║█████╗
-  ██╔══╝  ██║╚██╔╝██║   ██║   ██║  ╚██╔╝  ██╔═══╝ ██║██╔══╝
-  ███████╗██║ ╚═╝ ██║   ██║   ██║   ██║   ██║     ██║███████╗
-  ╚══════╝╚═╝     ╚═╝   ╚═╝   ╚═╝   ╚═╝   ╚═╝     ╚═╝╚══════╝
+  ███████╗███╗   ███╗████████╗██╗   ██╗██████╗ ██╗   ██╗██╗███████╗
+  ██╔════╝████╗ ████║╚══██╔══╝╚██╗ ██╔╝██╔══██╗╚██╗ ██╔╝██║██╔════╝
+  █████╗  ██╔████╔██║   ██║    ╚████╔╝ ██████╔╝ ╚████╔╝ ██║█████╗  
+  ██╔══╝  ██║╚██╔╝██║   ██║     ╚██╔╝  ██╔═══╝   ╚██╔╝  ██║██╔══╝  
+  ███████╗██║ ╚═╝ ██║   ██║      ██║   ██║        ██║   ██║███████╗
+  ╚══════╝╚═╝     ╚═╝   ╚═╝      ╚═╝   ╚═╝        ╚═╝   ╚═╝╚══════╝
 `;
 
-const QUOTE = `  "${chalk.italic('code. create. conquer.')}"`;
+const retro = chalk.hex('#33ff33');
+const retroDim = chalk.hex('#1a7a1a');
+const retroAccent = chalk.hex('#66ff66');
 
 const projects = {
   qrkraft: require('./projects/qrkraft')
 };
 
-async function prompt(rl, question) {
-  return new Promise((resolve) => {
-    rl.question(question, resolve);
-  });
-}
-
 async function interactive() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: gradient.pastel('>> ')
+    prompt: retro('>> ')
   });
 
   console.clear();
-  console.log(gradient.pastel.multiline(BANNER));
-  console.log(QUOTE);
+  console.log(retro(BANNER));
+  console.log(retroDim('  ─────────────────────────────────────────────'));
+  console.log(retro('  "code. create. conquer."'));
+  console.log(retroDim('  ─────────────────────────────────────────────'));
   console.log();
-  console.log(chalk.dim('  Type ') + chalk.cyan('get <project>') + chalk.dim(' to install a project'));
-  console.log(chalk.dim('  Type ') + chalk.cyan('help') + chalk.dim(' for available commands'));
-  console.log(chalk.dim('  Type ') + chalk.cyan('exit') + chalk.dim(' or press Ctrl+C to quit'));
+  console.log(retroDim('  ├ ') + retroAccent('get <project>') + retroDim(' ─ install a project'));
+  console.log(retroDim('  ├ ') + retroAccent('help') + retroDim('        ─ show available commands'));
+  console.log(retroDim('  ├ ') + retroAccent('exit') + retroDim('        ─ quit'));
+  console.log(retroDim('  └────────────────────────────────────────────'));
   console.log();
 
   rl.prompt();
@@ -57,7 +55,7 @@ async function interactive() {
     }
 
     if (cmd === 'exit' || cmd === 'quit') {
-      console.log(chalk.dim('\n  Goodbye.'));
+      console.log(retroDim('\n  System halted.'));
       rl.close();
       process.exit(0);
       return;
@@ -68,12 +66,12 @@ async function interactive() {
     } else if (cmd === 'get') {
       if (!arg) {
         console.log(chalk.red('  Specify a project name. Usage: get <project>'));
-        console.log(chalk.dim('  Available: ') + Object.keys(projects).join(', '));
+        console.log(retroDim('  Available: ') + retro(Object.keys(projects).join(', ')));
       } else if (projects[arg.toLowerCase()]) {
         await getCommand.install(arg.toLowerCase(), projects[arg.toLowerCase()]);
       } else {
         console.log(chalk.red(`  Unknown project "${arg}".`));
-        console.log(chalk.dim('  Available: ') + Object.keys(projects).join(', '));
+        console.log(retroDim('  Available: ') + retro(Object.keys(projects).join(', ')));
       }
     } else {
       console.log(chalk.red(`  Unknown command "${cmd}". Type help for available commands.`));
@@ -83,7 +81,7 @@ async function interactive() {
   });
 
   rl.on('close', () => {
-    console.log(chalk.dim('\n  Goodbye.'));
+    console.log(retroDim('\n  System halted.'));
     process.exit(0);
   });
 }

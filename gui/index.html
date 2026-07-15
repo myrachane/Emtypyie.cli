@@ -5,84 +5,142 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EMTYPYIE</title>
   <style>
+    @keyframes scanline {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(4px); }
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.97; }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #0a0a0f;
-      color: #e0e0e8;
+      font-family: 'Courier New', 'Consolas', 'Liberation Mono', monospace;
+      background: #000;
+      color: #33ff33;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 0, 0.03) 2px,
+        rgba(0, 255, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      animation: scanline 8s linear infinite;
+      z-index: 999;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+      z-index: 998;
     }
     .app {
-      width: 600px;
-      max-width: 90vw;
+      width: 680px;
+      max-width: 92vw;
+      animation: flicker 0.15s infinite;
+      position: relative;
+      z-index: 1;
     }
     .banner {
       font-size: 11px;
       line-height: 1.3;
-      color: #6366f1;
-      margin-bottom: 32px;
+      color: #1a7a1a;
+      margin-bottom: 24px;
       text-align: center;
+      text-shadow: 0 0 4px #33ff33, 0 0 8px #33ff33;
+    }
+    .banner em {
+      font-style: normal;
+      color: #33ff33;
     }
     .terminal {
-      background: #12121a;
-      border: 1px solid #1e1e2e;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      background: #0a0a0a;
+      border: 2px solid #1a7a1a;
+      box-shadow: 0 0 12px rgba(51, 255, 51, 0.15), inset 0 0 30px rgba(0,0,0,0.8);
+      position: relative;
+    }
+    .terminal::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,30,0,0.3) 100%);
+      pointer-events: none;
     }
     .terminal-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 14px 20px;
-      border-bottom: 1px solid #1e1e2e;
-      background: #0e0e16;
+      padding: 10px 16px;
+      border-bottom: 1px solid #1a7a1a;
+      background: #050505;
     }
-    .dots { display: flex; gap: 6px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot.r { background: #ef4444; }
-    .dot.y { background: #f59e0b; }
-    .dot.g { background: #22c55e; }
-    .terminal-title { font-size: 12px; color: #555; margin-left: 8px; }
+    .terminal-title {
+      font-size: 12px;
+      color: #1a7a1a;
+      margin-left: auto;
+    }
     .terminal-body {
       padding: 24px;
       font-size: 14px;
+      position: relative;
+      z-index: 1;
     }
     .prompt-line {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-top: 16px;
     }
     .prompt-symbol {
-      color: #6366f1;
+      color: #33ff33;
       font-weight: 700;
       font-size: 16px;
+    }
+    .prompt-symbol::after {
+      content: '_';
+      animation: blink 1s step-end infinite;
+      margin-left: 2px;
     }
     .prompt-input {
       flex: 1;
       background: transparent;
       border: none;
-      color: #e0e0e8;
+      color: #33ff33;
       font-size: 14px;
       font-family: inherit;
       outline: none;
+      caret-color: #33ff33;
     }
-    .prompt-input::placeholder { color: #333; }
-    .output { margin-bottom: 16px; }
+    .prompt-input::placeholder { color: #0a3a0a; }
+    .output { margin-bottom: 16px; max-height: 200px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1a7a1a transparent; }
     .output-line {
-      padding: 4px 0;
+      padding: 3px 0;
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.5;
     }
-    .output-line.cmd { color: #6366f1; font-weight: 500; }
-    .output-line.info { color: #888; }
-    .output-line.success { color: #22c55e; }
-    .output-line.error { color: #ef4444; }
-    .output-line.dim { color: #555; }
+    .output-line.cmd { color: #66ff66; font-weight: 600; }
+    .output-line.info { color: #1a7a1a; }
+    .output-line.success { color: #33ff33; font-weight: 600; }
+    .output-line.error { color: #ff3333; }
+    .output-line.dim { color: #0a4a0a; }
     .projects {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -90,47 +148,46 @@
       margin: 12px 0;
     }
     .project-card {
-      padding: 16px;
-      border: 1px solid #1e1e2e;
-      border-radius: 8px;
-      background: #0e0e16;
+      padding: 14px;
+      border: 1px solid #1a7a1a;
+      background: #050505;
       cursor: pointer;
       transition: all 0.15s;
     }
     .project-card:hover {
-      border-color: #6366f1;
-      background: rgba(99,102,241,0.06);
+      border-color: #33ff33;
+      background: #0a1a0a;
+      box-shadow: 0 0 8px rgba(51, 255, 51, 0.1);
     }
-    .project-card h3 { font-size: 14px; margin-bottom: 4px; color: #e0e0e8; }
-    .project-card p { font-size: 11px; color: #666; }
+    .project-card h3 { font-size: 14px; margin-bottom: 4px; color: #33ff33; }
+    .project-card p { font-size: 11px; color: #1a7a1a; }
     .install-btn {
       margin-top: 8px;
       padding: 4px 12px;
-      border: 1px solid #6366f1;
-      border-radius: 4px;
+      border: 1px solid #33ff33;
       background: transparent;
-      color: #6366f1;
+      color: #33ff33;
       font-size: 11px;
       cursor: pointer;
       transition: all 0.15s;
       font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    .install-btn:hover { background: #6366f1; color: #fff; }
+    .install-btn:hover { background: #33ff33; color: #000; }
     .links { margin-top: 20px; text-align: center; }
     .links a {
-      color: #555;
+      color: #1a7a1a;
       text-decoration: none;
       font-size: 12px;
       margin: 0 10px;
       transition: color 0.15s;
     }
-    .links a:hover { color: #6366f1; }
+    .links a:hover { color: #33ff33; text-shadow: 0 0 4px #33ff33; }
     .loading-bar {
       width: 100%;
-      height: 3px;
-      background: #1e1e2e;
-      border-radius: 2px;
-      overflow: hidden;
+      height: 2px;
+      background: #0a1a0a;
       margin: 8px 0;
       display: none;
     }
@@ -138,34 +195,33 @@
     .loading-bar-fill {
       height: 100%;
       width: 0%;
-      background: #6366f1;
-      border-radius: 2px;
-      transition: width 0.3s;
+      background: #33ff33;
+      box-shadow: 0 0 4px #33ff33;
     }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1a7a1a; }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="banner">
-      ███████╗███╗   ███╗████████╗██╗██╗   ██╗██████╗ ██╗███████╗<br>
-      ██╔════╝████╗ ████║╚══██╔══╝██║╚██╗ ██╔╝██╔══██╗██║██╔════╝<br>
-      █████╗  ██╔████╔██║   ██║   ██║ ╚████╔╝ ██████╔╝██║█████╗<br>
-      ██╔══╝  ██║╚██╔╝██║   ██║   ██║  ╚██╔╝  ██╔═══╝ ██║██╔══╝<br>
-      ███████╗██║ ╚═╝ ██║   ██║   ██║   ██║   ██║     ██║███████╗<br>
-      ╚══════╝╚═╝     ╚═╝   ╚═╝   ╚═╝   ╚═╝   ╚═╝     ╚═╝╚══════╝
+      <em>████████</em> ██╗<em>   ███</em>█╗<em>██████</em>██╗████████╗██╗   ██╗██████╗ ██╗   ██╗██╗███████╗<br>
+      ██╔════╝████╗ ████║╚══██╔══╝╚██╗ ██╔╝██╔══██╗╚██╗ ██╔╝██║██╔════╝<br>
+      █████╗  ██╔████╔██║   ██║    ╚████╔╝ ██████╔╝ ╚████╔╝ ██║█████╗  <br>
+      ██╔══╝  ██║╚██╔╝██║   ██║     ╚██╔╝  ██╔═══╝   ╚██╔╝  ██║██╔══╝  <br>
+      ███████╗██║ ╚═╝ ██║   ██║      ██║   ██║        ██║   ██║███████╗<br>
+      ╚══════╝╚═╝     ╚═╝   ╚═╝      ╚═╝   ╚═╝        ╚═╝   ╚═╝╚══════╝
     </div>
 
     <div class="terminal">
       <div class="terminal-header">
-        <div class="dots">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-        </div>
-        <span class="terminal-title">emtypyie</span>
+        <span class="terminal-title">EMTYPYIE v1.0.2 — CRT // TERMINAL</span>
       </div>
       <div class="terminal-body">
         <div class="output" id="output">
-          <div class="output-line info">Type a command or click a project below.</div>
-          <div class="output-line dim">Available: get qrkraft</div>
+          <div class="output-line info">SYSTEM READY. AWAITING INPUT.</div>
+          <div class="output-line dim">AVAILABLE: get qrkraft</div>
         </div>
 
         <div class="loading-bar" id="loadingBar">
@@ -180,8 +236,8 @@
         </div>
 
         <div class="links">
-          <a href="https://github.com/myrachane">GitHub</a>
-          <a href="https://emtypyie.in">Website</a>
+          <a href="https://github.com/myrachane">GITHUB</a>
+          <a href="https://emtypyie.in">WEBSITE</a>
           <a href="https://github.com/myrachane/QRkRAFT">QR KRAFT</a>
         </div>
       </div>
@@ -211,7 +267,7 @@
         card.className = 'project-card';
         card.innerHTML = `
           <h3>${proj.name}</h3>
-          <p>${proj.description} <span style="color:#555">${proj.version}</span></p>
+          <p>${proj.description} <span style="color:#1a7a1a">${proj.version}</span></p>
           <button class="install-btn" data-project="${key}">get ${key}</button>
         `;
         card.querySelector('.install-btn').addEventListener('click', () => handleCommand(`get ${key}`));
@@ -274,19 +330,19 @@
           setLoading(100);
 
           if (response.ok) {
-            addLine(`✓ Saved to ${project}-setup.exe`, 'success');
+            addLine('DOWNLOAD COMPLETE.', 'success');
             addLine('Run the installer to set up.', 'dim');
           } else {
             const err = await response.text();
-            addLine(`✗ Download failed: ${err}`, 'error');
+            addLine(`FAILED: ${err}`, 'error');
           }
         } catch (e) {
           clearInterval(interval);
           setLoading(100);
-          addLine(`✗ Error: ${e.message}`, 'error');
+          addLine(`ERROR: ${e.message}`, 'error');
         }
       } else {
-        addLine(`Unknown command. Try: get qrkraft`, 'error');
+        addLine('Unknown command. Try: get qrkraft', 'error');
       }
 
       input.value = '';

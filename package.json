@@ -1,6 +1,6 @@
 {
   "name": "emtypyie",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "EMTYPYIE CLI - Project manager and launcher",
   "main": "cli.js",
   "bin": {
@@ -11,8 +11,7 @@
     "gui": "node gui/server.js"
   },
   "dependencies": {
-    "chalk": "^4.1.2",
-    "gradient-string": "^2.0.2"
+    "chalk": "^4.1.2"
   },
   "license": "MIT"
 }

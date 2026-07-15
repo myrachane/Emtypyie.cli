@@ -6,6 +6,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const chalk = require('chalk');
+const retro = chalk.hex('#33ff33');
+const retroDim = chalk.hex('#1a7a1a');
+
 const PORT = 3000;
 const HOST = '127.0.0.1';
 
@@ -90,11 +94,14 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   const url = `http://${HOST}:${PORT}`;
-  console.log(`EMTYPYIE GUI running at ${url}`);
+  console.log(retro('  ─────────────────────────────'));
+  console.log(retro('  EMTYPYIE GUI'));
+  console.log(retroDim(`  ${url}`));
+  console.log(retro('  ─────────────────────────────'));
 
   try {
     execSync(`start ${url}`, { stdio: 'ignore' });
   } catch (_) {}
 
-  console.log('Press Ctrl+C to stop');
+  console.log(retroDim('  Press Ctrl+C to stop'));
 });
