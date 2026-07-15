@@ -2,13 +2,22 @@
 
 > Run emtypyie projects from your terminal with ease — the future runtime engine.
 
+![GitHub release](https://img.shields.io/github/v/release/myrachane/emtypyie-cli)
+![npm](https://img.shields.io/npm/v/emtypyie-cli)
+
 ## Install
+
+**npm** (requires Node.js 18+):
 
 ```bash
 npm install -g emtypyie-cli
 ```
 
-Requires **Node.js 18+**.
+**winget** (standalone binary, no Node.js required):
+
+```bash
+winget install myrachane.emtypyie-cli
+```
 
 After installation, run:
 
@@ -60,10 +69,19 @@ emtypyie gui
 node gui/server.js
 ```
 
+## Build standalone binary
+
+```bash
+npm run build
+```
+
+Produces `dist/emtypyie.exe` — a portable Windows executable with embedded Node.js (no runtime required).
+
 ## Links
 
 - GitHub: [myrachane/emtypyie-cli](https://github.com/myrachane/emtypyie-cli)
 - Website: [emtypyie.in/cli](https://emtypyie.in/cli)
+- Winget: `winget install myrachane.emtypyie-cli`
 
 ## License
 

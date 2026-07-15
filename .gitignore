@@ -2,3 +2,4 @@ node_modules/
 .npmrc
 *.log
 npm_token.txt
+dist/

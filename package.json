@@ -9,7 +9,16 @@
   "scripts": {
     "start": "node cli.js",
     "gui": "node gui/server.js",
+    "build": "pkg cli.js --targets node18-win-x64 --output dist/emtypyie.exe",
     "prepublishOnly": "node -e \"console.log('Publishing emtypyie-cli v' + require('./package.json').version)\""
+  },
+  "pkg": {
+    "assets": [
+      "commands/**/*",
+      "projects/**/*",
+      "gui/**/*",
+      "node_modules/chalk/**/*"
+    ]
   },
   "engines": {
     "node": ">=18"
@@ -27,5 +36,8 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }
