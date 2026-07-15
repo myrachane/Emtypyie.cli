@@ -195,6 +195,22 @@ function fmtMem(mb) {
   return mb.toFixed(0) + ' MiB';
 }
 
+function artWidth(line) {
+  let w = 0;
+  for (const ch of line) {
+    const code = ch.codePointAt(0);
+    if (code >= 0x2800 && code <= 0x28FF) w += 2;
+    else w += 1;
+  }
+  return w;
+}
+
+function padArt(line, targetWidth) {
+  const w = artWidth(line);
+  const needed = targetWidth - w;
+  return needed > 0 ? line + ' '.repeat(needed) : line;
+}
+
 function show() {
   const platform = os.platform();
   const release = os.release();
@@ -215,7 +231,8 @@ function show() {
   const art = ASCII_ARTS[Math.floor(Math.random() * ASCII_ARTS.length)];
   const tsun = TSUNDERE_LINES[Math.floor(Math.random() * TSUNDERE_LINES.length)];
 
-  const labelWidth = 10;
+  const maxArtWidth = Math.max(...art.map(l => artWidth(l)));
+  const labelWidth = 9;
 
   const infoLines = [
     { label: 'OS', value: `${getOsName()} (${release})` },
@@ -230,23 +247,25 @@ function show() {
   ];
 
   console.log();
-  console.log(`  ${cDim('┌')}${cDim('─'.repeat(44))}${cDim('┐')}`);
-  for (const l of art) {
-    console.log(`  ${cDim('│')} ${c(l)}${cDim(' │')}`);
-  }
-  console.log(`  ${cDim('└')}${cDim('─'.repeat(44))}${cDim('┘')}`);
+  for (let i = 0; i < Math.max(art.length, infoLines.length + 2); i++) {
+    const artLine = i < art.length ? c(padArt(art[i], maxArtWidth)) : ' '.repeat(maxArtWidth);
 
-  const separator = cDim('  ──────────────────────────────────');
-  console.log();
-  console.log(cBold(`  EMTYPYIE`) + c(`@${hostname}`));
-  console.log(separator);
-  for (const l of infoLines) {
-    const pad = ' '.repeat(Math.max(1, labelWidth - l.label.length));
-    console.log(`  ${c(l.label)}${cDim('.'.repeat(4))}${pad}${cDim('·')}  ${c(l.value)}`);
+    let infoLine = '';
+    if (i === 0) {
+      infoLine = cBold('EMTYPYIE') + cDim('@') + c(hostname);
+    } else if (i === 1) {
+      infoLine = cDim('\u2500'.repeat(hostname.length + 11));
+    } else if (i - 2 < infoLines.length) {
+      const l = infoLines[i - 2];
+      const pad = ' '.repeat(Math.max(0, labelWidth - l.label.length));
+      infoLine = `${c(l.label)}${cDim('\u2500'.repeat(3))}${pad}${cDim('\u00b7')}  ${c(l.value)}`;
+    }
+
+    console.log(`  ${artLine}   ${infoLine}`);
   }
-  console.log(separator);
+
   console.log();
-  console.log(`  ${c.italic(tsun)}`);
+  console.log(`  ${' '.repeat(maxArtWidth)}   ${c.italic(tsun)}`);
   console.log();
 }
 
