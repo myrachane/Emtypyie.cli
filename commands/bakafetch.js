@@ -255,6 +255,10 @@ function artWidth(line) {
   return w;
 }
 
+function visibleLen(s) {
+  return s.replace(/\x1b\[[0-9;]*m/g, '').length;
+}
+
 function padArt(line, targetWidth) {
   const w = artWidth(line);
   const needed = targetWidth - w;
@@ -262,6 +266,8 @@ function padArt(line, targetWidth) {
 }
 
 function show() {
+  const platform = os.platform();
+  const release = os.release();
   const hostname = os.hostname();
   const uptime = os.uptime();
   const cpus = os.cpus();
@@ -270,6 +276,7 @@ function show() {
   const usedMem = totalMem - freeMem;
   const cpuModel = cpus[0]?.model || 'Unknown';
   const cpuCores = cpus.length;
+  const pkg = require('../package.json');
 
   const color = getColor();
   const c = chalk.hex(color);
@@ -281,21 +288,41 @@ function show() {
 
   const trimmed = art.map(l => l.trim());
   const maxArtWidth = Math.max(...trimmed.map(l => artWidth(l)));
+  const labelWidth = 9;
+
+  const infoLines = [
+    { label: 'OS', value: `${getOsName()} (${release})` },
+    { label: 'HOST', value: hostname.toUpperCase() },
+    { label: 'KERNEL', value: `emtypyie cli v${pkg.version}` },
+    { label: 'UPTIME', value: formatUptime(uptime) },
+    { label: 'SHELL', value: 'emtypyie' },
+    { label: 'CPU', value: `${cpuModel} (${cpuCores})` },
+    { label: 'GPU', value: getGpu().split(',')[0].trim() },
+    { label: 'MEMORY', value: `${fmtMem(usedMem)} / ${fmtMem(totalMem)}` },
+    { label: 'BUILD', value: getBuild() },
+  ];
+
+  const infoFormatted = infoLines.map(l => {
+    const pad = ' '.repeat(Math.max(0, labelWidth - l.label.length));
+    return `${c(l.label)}${cDim('\u2500'.repeat(3))}${pad}${cDim('\u00b7')}  ${c(l.value)}`;
+  });
+
+  const headerLine = `${cBold('EMTYPYIE')}${cDim('@')}${c(hostname)}`;
+  const sepLine = cDim('\u2500'.repeat(hostname.length + 11));
+
+  const allRightLines = [headerLine, sepLine, ...infoFormatted];
+  const maxRightWidth = Math.max(...allRightLines.map(l => visibleLen(l)));
+
+  const separatorWidth = 3;
   const termWidth = process.stdout.columns || 80;
-  const artPadding = Math.max(0, Math.floor((termWidth - maxArtWidth) / 2));
+  const blockWidth = maxArtWidth + separatorWidth + maxRightWidth;
+  const blockPadding = Math.max(0, Math.floor((termWidth - blockWidth) / 2));
 
   console.log();
-  for (const line of trimmed) {
-    console.log(' '.repeat(artPadding) + c(line));
-  }
-
-  console.log();
-  const info = `${getOsName()} ${os.release()}  \u00b7  ${cpuModel} (${cpuCores})  \u00b7  ${fmtMem(usedMem)} / ${fmtMem(totalMem)}  \u00b7  up ${formatUptime(uptime)}`;
-  const infoPadding = Math.max(0, Math.floor((termWidth - info.length) / 2));
-  if (infoPadding >= 0) {
-    console.log(' '.repeat(infoPadding) + cDim(info));
-  } else {
-    console.log(cDim(info));
+  for (let i = 0; i < Math.max(art.length, allRightLines.length); i++) {
+    const artLine = i < trimmed.length ? c(padArt(trimmed[i], maxArtWidth)) : ' '.repeat(maxArtWidth);
+    const infoLine = i < allRightLines.length ? allRightLines[i] : '';
+    console.log(' '.repeat(blockPadding) + artLine + ' '.repeat(separatorWidth) + infoLine);
   }
 
   console.log();
