@@ -6,6 +6,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const chalk = require('chalk');
 const getCommand = require('./commands/get');
+const bakafetch = require('./commands/bakafetch');
 
 const retro = chalk.hex('#33ff33');
 const retroDim = chalk.hex('#1a7a1a');
@@ -81,6 +82,15 @@ async function handleCommand(cmd, arg, rl) {
       await doIssue(arg);
       break;
 
+    case 'bakafetch':
+    case 'bf':
+      bakafetch.show();
+      break;
+
+    case 'wrap':
+      doWrap(arg);
+      break;
+
     case 'exit':
     case 'quit':
       console.log(retroDim('\n  System halted.'));
@@ -103,6 +113,9 @@ function showHelp() {
   console.log(retro('  /rm <project>') + retroDim('      delete project files'));
   console.log(retro('  /issue <project>') + retroDim('   open issue tracker'));
   console.log(retro('  /issue <project> -m') + retroDim('  file a bug report'));
+  console.log(retro('  /bakafetch') + retroDim('         system info with style'));
+  console.log(retro('  /bf') + retroDim('               shortcut for /bakafetch'));
+  console.log(retro('  /wrap bakafetch <c>') + retroDim('  change bakafetch color'));
   console.log(retro('  /about') + retroDim('             about emtypyie'));
   console.log(retro('  /wiki') + retroDim('              open wiki.emtypyie.in'));
   console.log(retro('  /help') + retroDim('             this screen'));
@@ -123,7 +136,8 @@ function showAbout() {
   console.log(retro('  EMTYPYIE — Project Manager'));
   console.log(retroDim('  ─────────────────────────────'));
   console.log();
-  console.log(retroDim('  Version: ') + retro('1.1.0'));
+  const pkg = require('./package.json');
+  console.log(retroDim('  Version: ') + retro(pkg.version));
   console.log(retroDim('  Website: ') + retroAccent('https://emtypyie.in'));
   console.log(retroDim('  GitHub:  ') + retroAccent('https://github.com/myrachane'));
   console.log(retroDim('  Wiki:    ') + retroAccent('https://wiki.emtypyie.in'));
@@ -244,6 +258,21 @@ async function doIssue(arg) {
     console.log(retroDim('  Browser opened.'));
   } else {
     console.log(retroDim(`  Visit: ${url}`));
+  }
+}
+
+function doWrap(arg) {
+  const parts = arg.trim().split(/\s+/);
+  if (parts.length < 2 || parts[0].toLowerCase() !== 'bakafetch') {
+    console.log(retroDim('  Usage: ') + retro('/wrap bakafetch <color>'));
+    console.log(retroDim('  Colors: ') + retro(Object.keys(bakafetch.COLORS).join(', ')) + retroDim(' or hex (e.g. #ff8800)'));
+    return;
+  }
+  const color = parts.slice(1).join(' ');
+  if (bakafetch.setColor(color)) {
+    console.log(retro('  Bakafetch color set to ') + chalk.hex(bakafetch.getColor())(color));
+  } else {
+    console.log(retroErr('  Invalid color. Use: ') + retro(Object.keys(bakafetch.COLORS).join(', ')) + retroErr(' or hex like #ff8800'));
   }
 }
 

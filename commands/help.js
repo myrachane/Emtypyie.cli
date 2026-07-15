@@ -14,6 +14,9 @@ function show(projects) {
   console.log(retro('  /rm <project>') + retroDim('      delete project files'));
   console.log(retro('  /issue <project>') + retroDim('   open issue tracker'));
   console.log(retro('  /issue <project> -m') + retroDim('  file a bug report'));
+  console.log(retro('  /bakafetch') + retroDim('         system info with style'));
+  console.log(retro('  /bf') + retroDim('               shortcut for /bakafetch'));
+  console.log(retro('  /wrap bakafetch <c>') + retroDim('  change bakafetch color'));
   console.log(retro('  /about') + retroDim('             about emtypyie'));
   console.log(retro('  /wiki') + retroDim('              open wiki.emtypyie.in'));
   console.log(retro('  /help') + retroDim('             this screen'));
