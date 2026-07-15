@@ -1,32 +1,28 @@
-const chalk = require('chalk');
-
-const retro = chalk.hex('#e2e8f0');
-const retroDim = chalk.hex('#64748b');
-const retroAccent = chalk.hex('#38bdf8');
+const t = require('./theme');
 
 function show(projects) {
   console.log();
-  console.log(retroDim('  ─── Commands ───'));
+  console.log(t.retroDim('  ─── Commands ───'));
   console.log();
-  console.log(retro('  /get <project>') + retroDim('     install a project'));
-  console.log(retro('  /flash <project>') + retroDim('   re-download latest version'));
-  console.log(retro('  /info <project>') + retroDim('    show project details'));
-  console.log(retro('  /rm <project>') + retroDim('      delete project files'));
-  console.log(retro('  /issue <project>') + retroDim('   open issue tracker'));
-  console.log(retro('  /issue <project> -m') + retroDim('  file a bug report'));
-  console.log(retro('  /bakafetch') + retroDim('         system info with style'));
-  console.log(retro('  /bf') + retroDim('               shortcut for /bakafetch'));
-  console.log(retro('  /wrap bakafetch <c>') + retroDim('  change bakafetch color'));
-  console.log(retro('  /about') + retroDim('             about emtypyie'));
-  console.log(retro('  /wiki') + retroDim('              open wiki.emtypyie.in'));
-  console.log(retro('  /help') + retroDim('             this screen'));
-  console.log(retro('  /exit') + retroDim('             quit'));
+  console.log(t.retro('  /get <project>') + t.retroDim('     install a project'));
+  console.log(t.retro('  /flash <project>') + t.retroDim('   re-download latest version'));
+  console.log(t.retro('  /info <project>') + t.retroDim('    show project details'));
+  console.log(t.retro('  /rm <project>') + t.retroDim('      delete project files'));
+  console.log(t.retro('  /issue <project>') + t.retroDim('   open issue tracker'));
+  console.log(t.retro('  /issue <project> -m') + t.retroDim('  file a bug report'));
+  console.log(t.retro('  /bakafetch') + t.retroDim('         system info with style'));
+  console.log(t.retro('  /bf') + t.retroDim('               shortcut for /bakafetch'));
+  console.log(t.retro('  /wrap bakafetch <c>') + t.retroDim('  change bakafetch color'));
+  console.log(t.retro('  /about') + t.retroDim('             about emtypyie'));
+  console.log(t.retro('  /wiki') + t.retroDim('              open wiki.emtypyie.in'));
+  console.log(t.retro('  /help') + t.retroDim('             this screen'));
+  console.log(t.retro('  /exit') + t.retroDim('             quit'));
   console.log();
-  console.log(retroDim('  ─── Projects ───'));
+  console.log(t.retroDim('  ─── Projects ───'));
   console.log();
   for (const [name, proj] of Object.entries(projects)) {
     const pad = ' '.repeat(Math.max(0, 12 - name.length));
-    console.log(`  ${retroAccent(name)}${pad}${retroDim(proj.description || '')}`);
+    console.log(`  ${t.retroAccent(name)}${pad}${t.retroDim(proj.description || '')}`);
   }
   console.log();
 }

@@ -5,9 +5,7 @@ const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 
-const retro = chalk.hex('#e2e8f0');
-const retroDim = chalk.hex('#64748b');
-const retroAccent = chalk.hex('#38bdf8');
+const t = require('./theme');
 
 function download(url, dest) {
   return new Promise((resolve, reject) => {
@@ -35,7 +33,7 @@ function download(url, dest) {
         downloaded += chunk.length;
         if (total) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          process.stdout.write(`\r  ${retroDim('▼')} ${retro(pct + '%')}`);
+          process.stdout.write(`\r  ${t.retroDim('▼')} ${t.retro(pct + '%')}`);
         }
       });
 
@@ -56,14 +54,14 @@ function download(url, dest) {
 
 async function install(name, project) {
   console.log();
-  console.log(retroDim('  ─────────────────────────────'));
-  console.log(retro(`  Installing ${retroAccent(project.name || name)}`));
-  console.log(retroDim('  ─────────────────────────────'));
+  console.log(t.retroDim('  ─────────────────────────────'));
+  console.log(t.retro(`  Installing ${t.retroAccent(project.name || name)}`));
+  console.log(t.retroDim('  ─────────────────────────────'));
   console.log();
 
   const version = project.version || 'latest';
-  console.log(retroDim(`  Version: ${retro(version)}`));
-  console.log(retroDim(`  Repo: ${retro(project.repo || 'N/A')}`));
+  console.log(t.retroDim(`  Version: ${t.retro(version)}`));
+  console.log(t.retroDim(`  Repo: ${t.retro(project.repo || 'N/A')}`));
   console.log();
 
   if (project.install) {
@@ -76,7 +74,7 @@ async function install(name, project) {
 
     try {
       await download(project.download, dest);
-      console.log(`  ${retro('✓')} ${retroDim('Saved to')} ${retroAccent(dest)}`);
+      console.log(`  ${t.retro('✓')} ${t.retroDim('Saved to')} ${t.retroAccent(dest)}`);
 
       if (project.postInstall) {
         project.postInstall(dest);
@@ -89,12 +87,12 @@ async function install(name, project) {
 
   if (project.info) {
     console.log();
-    console.log(retroDim('  ─── Info ───'));
+    console.log(t.retroDim('  ─── Info ───'));
     console.log(project.info.trim().split('\n').map(l => `  ${l}`).join('\n'));
   }
 
   console.log();
-  console.log(retro('  ✔ Done.'));
+  console.log(t.retro('  ✔ Done.'));
   console.log();
 }
 

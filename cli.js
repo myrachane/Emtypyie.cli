@@ -8,11 +8,7 @@ const chalk = require('chalk');
 const getCommand = require('./commands/get');
 const bakafetch = require('./commands/bakafetch');
 
-const retro = chalk.hex('#e2e8f0');
-const retroDim = chalk.hex('#64748b');
-const retroAccent = chalk.hex('#38bdf8');
-const retroWarn = chalk.hex('#fbbf24');
-const retroErr = chalk.hex('#f87171');
+const t = require('./commands/theme');
 
 const BANNER = `
   ______ __  __ _________     _________     _______ ______ 
@@ -54,11 +50,11 @@ async function handleCommand(cmd, arg, rl) {
       break;
 
     case 'wiki':
-      console.log(retro('  Opening wiki.emtypyie.in...'));
+      console.log(t.retro('  Opening wiki.emtypyie.in...'));
       if (openBrowser('https://wiki.emtypyie.in')) {
-        console.log(retroDim('  Browser opened.'));
+        console.log(t.retroDim('  Browser opened.'));
       } else {
-        console.log(retroErr('  Could not open browser. Visit https://wiki.emtypyie.in'));
+        console.log(t.retroErr('  Could not open browser. Visit https://wiki.emtypyie.in'));
       }
       break;
 
@@ -91,9 +87,29 @@ async function handleCommand(cmd, arg, rl) {
       doWrap(arg);
       break;
 
+    case 'clear':
+      console.clear();
+      break;
+
+    case 'update':
+      doUpdate();
+      break;
+
+    case 'list':
+      doList();
+      break;
+
+    case 'docs':
+      doDocs(arg);
+      break;
+
+    case 'changelog':
+      doChangelog();
+      break;
+
     case 'exit':
     case 'quit':
-      console.log(retroDim('\n  System halted.'));
+      console.log(t.retroDim('\n  System halted.'));
       if (rl) rl.close();
       process.exit(0);
       break;
@@ -103,71 +119,77 @@ async function handleCommand(cmd, arg, rl) {
       if (proj) {
         runProject(normalized, proj);
       } else {
-        console.log(retroErr(`  Unknown command "/${normalized}". Type /help for available commands.`));
+        console.log(t.retroErr(`  Unknown command "/${normalized}". Type /help for available commands.`));
       }
   }
 }
 
 function showHelp() {
   console.log();
-  console.log(retroDim('  ─── Commands ───'));
+  console.log(t.retroDim('  ─── Commands ───'));
   console.log();
-  console.log(retro('  /get <project>') + retroDim('     install a project'));
-  console.log(retro('  /flash <project>') + retroDim('   re-download latest version'));
-  console.log(retro('  /info <project>') + retroDim('    show project details'));
-  console.log(retro('  /rm <project>') + retroDim('      delete project files'));
-  console.log(retro('  /issue <project>') + retroDim('   open issue tracker'));
-  console.log(retro('  /issue <project> -m') + retroDim('  file a bug report'));
-  console.log(retro('  /bakafetch') + retroDim('         system info with style'));
-  console.log(retro('  /bf') + retroDim('               shortcut for /bakafetch'));
-  console.log(retro('  /wrap bakafetch <c>') + retroDim('  change bakafetch color'));
-  console.log(retro('  /about') + retroDim('             about emtypyie'));
-  console.log(retro('  /wiki') + retroDim('              open wiki.emtypyie.in'));
-  console.log(retro('  /help') + retroDim('             this screen'));
-  console.log(retro('  /exit') + retroDim('             quit'));
+  console.log(t.retro('  /get <project>') + t.retroDim('     install a project'));
+  console.log(t.retro('  /flash <project>') + t.retroDim('   re-download latest version'));
+  console.log(t.retro('  /info <project>') + t.retroDim('    show project details'));
+  console.log(t.retro('  /rm <project>') + t.retroDim('      delete project files'));
+  console.log(t.retro('  /issue <project>') + t.retroDim('   open issue tracker'));
+  console.log(t.retro('  /issue <project> -m') + t.retroDim('  file a bug report'));
+  console.log(t.retro('  /bakafetch') + t.retroDim('         system info with style'));
+  console.log(t.retro('  /bf') + t.retroDim('               shortcut for /bakafetch'));
+  console.log(t.retro('  /wrap bakafetch <c>') + t.retroDim('  change bakafetch color'));
+  console.log(t.retro('  /wrap all <theme>') + t.retroDim('    change CLI theme'));
+  console.log(t.retro('  /clear') + t.retroDim('              clear screen'));
+  console.log(t.retro('  /update') + t.retroDim('            update emtypyie'));
+  console.log(t.retro('  /list') + t.retroDim('              list projects'));
+  console.log(t.retro('  /docs <project>') + t.retroDim('    open project docs'));
+  console.log(t.retro('  /changelog') + t.retroDim('         what\'s new'));
+  console.log(t.retro('  /about') + t.retroDim('             about emtypyie'));
+  console.log(t.retro('  /wiki') + t.retroDim('              open wiki.emtypyie.in'));
+  console.log(t.retro('  /help') + t.retroDim('             this screen'));
+  console.log(t.retro('  /exit') + t.retroDim('             quit'));
   console.log();
-  console.log(retroDim('  ─── Projects ───'));
+  console.log(t.retroDim('  ─── Projects ───'));
   console.log();
   for (const [name, proj] of Object.entries(projects)) {
     const pad = ' '.repeat(Math.max(0, 12 - name.length));
-    console.log(`  ${retroAccent(name)}${pad}${retroDim(proj.description || '')}`);
+    console.log(`  ${t.retroAccent(name)}${pad}${t.retroDim(proj.description || '')}`);
   }
   console.log();
 }
 
 function showAbout() {
   console.log();
-  console.log(retroDim('  ─────────────────────────────'));
-  console.log(retro('  emtypyie CLI'));
-  console.log(retroDim('  ─────────────────────────────'));
+  console.log(t.retroDim('  ─────────────────────────────'));
+  console.log(t.retro('  emtypyie CLI'));
+  console.log(t.retroDim('  ─────────────────────────────'));
   console.log();
   const pkg = require('./package.json');
-  console.log(retroDim('  Version: ') + retro(pkg.version));
-  console.log(retroDim('  Website: ') + retroAccent('https://emtypyie.in'));
-  console.log(retroDim('  GitHub:  ') + retroAccent('https://github.com/myrachane'));
-  console.log(retroDim('  Wiki:    ') + retroAccent('https://wiki.emtypyie.in'));
-  console.log(retroDim('  Author:  ') + retro('myrachane'));
+  console.log(t.retroDim('  Version: ') + t.retro(pkg.version));
+  console.log(t.retroDim('  Website: ') + t.retroAccent('https://emtypyie.in'));
+  console.log(t.retroDim('  GitHub:  ') + t.retroAccent('https://github.com/myrachane'));
+  console.log(t.retroDim('  Wiki:    ') + t.retroAccent('https://wiki.emtypyie.in'));
+  console.log(t.retroDim('  Author:  ') + t.retro('myrachane'));
   console.log();
-  console.log(retro('  "code. create. conquer."'));
+  console.log(t.retro('  "code. create. conquer."'));
   console.log();
 }
 
 function showProjectInfo(name) {
   if (!name) {
-    console.log(retroErr('  Specify a project: /info <project>'));
+    console.log(t.retroErr('  Specify a project: /info <project>'));
     return;
   }
   const proj = projects[name.toLowerCase()];
   if (!proj) {
-    console.log(retroErr(`  Unknown project "${name}".`));
+    console.log(t.retroErr(`  Unknown project "${name}".`));
     return;
   }
   console.log();
-  console.log(retroDim('  ─── ') + retroAccent(proj.name || name) + retroDim(' ───'));
-  console.log(retroDim('  Description: ') + retro(proj.description || 'N/A'));
-  console.log(retroDim('  Version:     ') + retro(proj.version || 'latest'));
-  console.log(retroDim('  Repo:        ') + retroAccent(proj.repo || 'N/A'));
-  console.log(retroDim('  Download:    ') + retroDim(proj.download || 'N/A'));
+  console.log(t.retroDim('  ─── ') + t.retroAccent(proj.name || name) + t.retroDim(' ───'));
+  console.log(t.retroDim('  Description: ') + t.retro(proj.description || 'N/A'));
+  console.log(t.retroDim('  Version:     ') + t.retro(proj.version || 'latest'));
+  console.log(t.retroDim('  Repo:        ') + t.retroAccent(proj.repo || 'N/A'));
+  console.log(t.retroDim('  Download:    ') + t.retroDim(proj.download || 'N/A'));
   if (proj.info) {
     console.log();
     console.log(proj.info.trim().split('\n').map(l => `  ${l}`).join('\n'));
@@ -177,12 +199,12 @@ function showProjectInfo(name) {
 
 async function doGet(name) {
   if (!name) {
-    console.log(retroErr('  Specify a project: /get <project>'));
+    console.log(t.retroErr('  Specify a project: /get <project>'));
     return;
   }
   const proj = projects[name.toLowerCase()];
   if (!proj) {
-    console.log(retroErr(`  Unknown project "${name}".`));
+    console.log(t.retroErr(`  Unknown project "${name}".`));
     return;
   }
   await getCommand.install(name.toLowerCase(), proj);
@@ -190,41 +212,41 @@ async function doGet(name) {
 
 async function doFlash(name) {
   if (!name) {
-    console.log(retroErr('  Specify a project: /flash <project>'));
+    console.log(t.retroErr('  Specify a project: /flash <project>'));
     return;
   }
   const proj = projects[name.toLowerCase()];
   if (!proj) {
-    console.log(retroErr(`  Unknown project "${name}".`));
+    console.log(t.retroErr(`  Unknown project "${name}".`));
     return;
   }
   console.log();
-  console.log(retroWarn('  Re-downloading ') + retroAccent(proj.name || name) + retroWarn('...'));
+  console.log(t.retroWarn('  Re-downloading ') + t.retroAccent(proj.name || name) + t.retroWarn('...'));
   console.log();
   const dest = path.join(process.cwd(), proj.filename || `${name}-setup.exe`);
   if (fs.existsSync(dest)) {
     fs.unlinkSync(dest);
-    console.log(retroDim('  Removed old file.'));
+    console.log(t.retroDim('  Removed old file.'));
   }
   await getCommand.install(name.toLowerCase(), proj);
 }
 
 function doRemove(name) {
   if (!name) {
-    console.log(retroErr('  Specify a project: /rm <project>'));
+    console.log(t.retroErr('  Specify a project: /rm <project>'));
     return;
   }
   const proj = projects[name.toLowerCase()];
   if (!proj) {
-    console.log(retroErr(`  Unknown project "${name}".`));
+    console.log(t.retroErr(`  Unknown project "${name}".`));
     return;
   }
   const dest = path.join(process.cwd(), proj.filename || `${name}-setup.exe`);
   if (fs.existsSync(dest)) {
     fs.unlinkSync(dest);
-    console.log(retro('  Removed ') + retroDim(dest));
+    console.log(t.retro('  Removed ') + t.retroDim(dest));
   } else {
-    console.log(retroDim('  No local files found for ') + retroAccent(name));
+    console.log(t.retroDim('  No local files found for ') + t.retroAccent(name));
   }
 }
 
@@ -240,13 +262,13 @@ async function doIssue(arg) {
   }
 
   if (!name) {
-    console.log(retroErr('  Usage: /issue <project> -m "your message"'));
+    console.log(t.retroErr('  Usage: /issue <project> -m "your message"'));
     return;
   }
 
   const proj = projects[name];
   if (!proj) {
-    console.log(retroErr(`  Unknown project "${name}".`));
+    console.log(t.retroErr(`  Unknown project "${name}".`));
     return;
   }
 
@@ -258,54 +280,133 @@ async function doIssue(arg) {
     url = `https://github.com/${repoPath}/issues`;
   }
 
-  console.log(retro(`  Opening issue tracker for ${retroAccent(proj.name || name)}...`));
+  console.log(t.retro(`  Opening issue tracker for ${t.retroAccent(proj.name || name)}...`));
   if (openBrowser(url)) {
-    console.log(retroDim('  Browser opened.'));
+    console.log(t.retroDim('  Browser opened.'));
   } else {
-    console.log(retroDim(`  Visit: ${url}`));
+    console.log(t.retroDim(`  Visit: ${url}`));
   }
 }
 
 function runProject(name, proj) {
   const dest = path.join(process.cwd(), proj.filename || `${name}-setup.exe`);
   if (!fs.existsSync(dest)) {
-    console.log(retroErr(`  Project "${proj.name || name}" not downloaded yet. Use /get ${name} first.`));
+    console.log(t.retroErr(`  Project "${proj.name || name}" not downloaded yet. Use /get ${name} first.`));
     return;
   }
-  console.log(retro(`  Running ${retroAccent(proj.name || name)}...`));
+  console.log(t.retro(`  Running ${t.retroAccent(proj.name || name)}...`));
   execSync(`start "" "${dest}"`, { stdio: 'ignore' });
+}
+
+function doUpdate() {
+  console.log(t.retro('  Updating emtypyie...'));
+  try {
+    execSync('npm update -g emtypyie', { stdio: 'inherit' });
+    console.log(t.retro('  Update complete!'));
+  } catch {
+    console.log(t.retroErr('  Update failed. Try: npm update -g emtypyie'));
+  }
+}
+
+function doList() {
+  console.log();
+  console.log(t.retroDim('  ─── Projects ───'));
+  console.log();
+  for (const [name, proj] of Object.entries(projects)) {
+    const pad = ' '.repeat(Math.max(0, 12 - name.length));
+    console.log(`  ${t.retroAccent(name)}${pad}${t.retroDim(proj.version || '?')}  ${t.retro(proj.description || '')}`);
+  }
+  console.log();
+}
+
+function doDocs(arg) {
+  if (!arg) {
+    console.log(t.retroErr('  Specify a project: /docs <project>'));
+    return;
+  }
+  const proj = projects[arg.toLowerCase()];
+  if (!proj) {
+    console.log(t.retroErr(`  Unknown project "${arg}".`));
+    return;
+  }
+  const repo = proj.repo || `myrachane/${arg}`;
+  const url = `https://github.com/${repo}#readme`;
+  console.log(t.retro(`  Opening docs for ${t.retroAccent(proj.name || arg)}...`));
+  if (openBrowser(url)) {
+    console.log(t.retroDim('  Browser opened.'));
+  } else {
+    console.log(t.retroDim(`  Visit: ${url}`));
+  }
+}
+
+function doChangelog() {
+  const url = 'https://github.com/myrachane/emtypyie-cli/releases';
+  console.log(t.retro('  Opening changelog...'));
+  if (openBrowser(url)) {
+    console.log(t.retroDim('  Browser opened.'));
+  } else {
+    console.log(t.retroDim(`  Visit: ${url}`));
+  }
 }
 
 function doWrap(arg) {
   const parts = arg.trim().split(/\s+/);
-  if (parts.length < 2 || parts[0].toLowerCase() !== 'bakafetch') {
-    console.log(retroDim('  Usage: ') + retro('/wrap bakafetch <color>'));
-    console.log(retroDim('  Colors: ') + retro(Object.keys(bakafetch.COLORS).join(', ')) + retroDim(' or hex (e.g. #ff8800)'));
+  if (parts.length < 2) {
+    console.log(t.retroDim('  Usage: ') + t.retro('/wrap bakafetch <color>'));
+    console.log(t.retroDim('  Usage: ') + t.retro('/wrap all <theme>'));
+    console.log(t.retroDim('  Themes: ') + t.retro(Object.keys(t.THEMES).join(', ')));
+    console.log(t.retroDim('  Bakafetch colors: ') + t.retro(Object.keys(bakafetch.COLORS).join(', ')) + t.retroDim(' or hex'));
+    return;
+  }
+  if (parts[0].toLowerCase() === 'all') {
+    const theme = parts.slice(1).join(' ');
+    if (t.THEMES[theme]) {
+      t.apply(theme);
+      bakafetch.setColor(theme);
+      console.log(t.retro('  Theme set to ') + t.retroAccent(theme));
+    } else {
+      console.log(t.retroErr('  Invalid theme. Use: ') + t.retro(Object.keys(t.THEMES).join(', ')));
+    }
+    return;
+  }
+  if (parts[0].toLowerCase() !== 'bakafetch') {
+    console.log(t.retroDim('  Usage: ') + t.retro('/wrap bakafetch <color>'));
+    console.log(t.retroDim('  Usage: ') + t.retro('/wrap all <theme>'));
     return;
   }
   const color = parts.slice(1).join(' ');
   if (bakafetch.setColor(color)) {
-    console.log(retro('  Bakafetch color set to ') + chalk.hex(bakafetch.getColor())(color));
+    console.log(t.retro('  Bakafetch color set to ') + chalk.hex(bakafetch.getColor())(color));
   } else {
-    console.log(retroErr('  Invalid color. Use: ') + retro(Object.keys(bakafetch.COLORS).join(', ')) + retroErr(' or hex like #ff8800'));
+    console.log(t.retroErr('  Invalid color. Use: ') + t.retro(Object.keys(bakafetch.COLORS).join(', ')) + t.retroErr(' or hex like #ff8800'));
   }
+}
+
+const COMMANDS = ['help', 'about', 'wiki', 'info', 'get', 'flash', 'rm', 'issue', 'bakafetch', 'bf', 'wrap', 'clear', 'update', 'list', 'docs', 'changelog', 'exit', 'quit'];
+
+function completer(line) {
+  const input = line.replace(/^\//, '');
+  const parts = input.split(/\s+/);
+  const hits = COMMANDS.filter(c => c.startsWith(parts[0])).map(c => '/' + c + ' ');
+  return [hits.length ? hits : [], line];
 }
 
 function interactive() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: retro('>> ')
+    prompt: t.retro('>> '),
+    completer
   });
 
   console.clear();
   console.log(BANNER);
-  console.log(retroDim(`
+  console.log(t.retroDim(`
   ─────────────────────────────────────────────
-  `) + retro('"code. create. conquer."') + retroDim(`
+  `) + t.retro('"code. create. conquer."') + t.retroDim(`
   ─────────────────────────────────────────────
 
-  Type `) + retroAccent('/help') + retroDim(` for available commands.
+  Type `) + t.retroAccent('/help') + t.retroDim(` for available commands.
   ─────────────────────────────────────────────`));
   console.log();
 
@@ -327,7 +428,7 @@ function interactive() {
   });
 
   rl.on('close', () => {
-    console.log(retroDim('\n  System halted.'));
+    console.log(t.retroDim('\n  System halted.'));
     process.exit(0);
   });
 }
