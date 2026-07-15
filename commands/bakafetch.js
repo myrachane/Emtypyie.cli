@@ -215,43 +215,38 @@ function show() {
   const art = ASCII_ARTS[Math.floor(Math.random() * ASCII_ARTS.length)];
   const tsun = TSUNDERE_LINES[Math.floor(Math.random() * TSUNDERE_LINES.length)];
 
-  const maxArtWidth = Math.max(...art.map(l => l.length));
+  const labelWidth = 10;
 
-  const lines = [
-    { label: 'EMTYPYIE', value: `${hostname}` },
+  const infoLines = [
     { label: 'OS', value: `${getOsName()} (${release})` },
-    { label: 'Host', value: hostname },
-    { label: 'Kernel', value: `emtypyie cli v${require('../package.json').version}` },
-    { label: 'Uptime', value: formatUptime(uptime) },
-    { label: 'Shell', value: 'emtypyie' },
+    { label: 'HOST', value: hostname.toUpperCase() },
+    { label: 'KERNEL', value: `emtypyie cli v${require('../package.json').version}` },
+    { label: 'UPTIME', value: formatUptime(uptime) },
+    { label: 'SHELL', value: 'emtypyie' },
     { label: 'CPU', value: `${cpuModel} (${cpuCores})` },
     { label: 'GPU', value: getGpu() },
-    { label: 'Memory', value: `${fmtMem(usedMem)} / ${fmtMem(totalMem)}` },
-    { label: 'Build', value: getBuild() },
+    { label: 'MEMORY', value: `${fmtMem(usedMem)} / ${fmtMem(totalMem)}` },
+    { label: 'BUILD', value: getBuild() },
   ];
 
-  const maxLabelWidth = Math.max(...lines.map(l => l.label.length + 2));
-
   console.log();
-  for (let i = 0; i < Math.max(art.length, lines.length + 2); i++) {
-    const artLine = i < art.length ? art[i] : '';
-    const pad = artLine.length < maxArtWidth ? ' '.repeat(maxArtWidth - artLine.length) : '';
-
-    let infoLine = '';
-    if (i === 0) {
-      infoLine = cBold('  EMTYPYIE@') + c(hostname);
-    } else if (i === 1) {
-      infoLine = cDim('  ' + '-'.repeat(hostname.length + 11));
-    } else if (i - 2 < lines.length) {
-      const l = lines[i - 2];
-      infoLine = `  ${c(labelPad(l.label, maxLabelWidth))} ${cDim('·')}  ${c(l.value)}`;
-    }
-
-    console.log(`  ${artLine}${pad}  ${infoLine}`);
+  console.log(`  ${cDim('┌')}${cDim('─'.repeat(44))}${cDim('┐')}`);
+  for (const l of art) {
+    console.log(`  ${cDim('│')} ${c(l)}${cDim(' │')}`);
   }
+  console.log(`  ${cDim('└')}${cDim('─'.repeat(44))}${cDim('┘')}`);
 
+  const separator = cDim('  ──────────────────────────────────');
   console.log();
-  console.log(`  ${cDim('  ───')}  ${c.italic(tsun)}`);
+  console.log(cBold(`  EMTYPYIE`) + c(`@${hostname}`));
+  console.log(separator);
+  for (const l of infoLines) {
+    const pad = ' '.repeat(Math.max(1, labelWidth - l.label.length));
+    console.log(`  ${c(l.label)}${cDim('.'.repeat(4))}${pad}${cDim('·')}  ${c(l.value)}`);
+  }
+  console.log(separator);
+  console.log();
+  console.log(`  ${c.italic(tsun)}`);
   console.log();
 }
 
