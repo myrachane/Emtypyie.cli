@@ -99,7 +99,12 @@ async function handleCommand(cmd, arg, rl) {
       break;
 
     default:
-      console.log(retroErr(`  Unknown command "/${normalized}". Type /help for available commands.`));
+      const proj = projects[normalized];
+      if (proj) {
+        runProject(normalized, proj);
+      } else {
+        console.log(retroErr(`  Unknown command "/${normalized}". Type /help for available commands.`));
+      }
   }
 }
 
@@ -259,6 +264,16 @@ async function doIssue(arg) {
   } else {
     console.log(retroDim(`  Visit: ${url}`));
   }
+}
+
+function runProject(name, proj) {
+  const dest = path.join(process.cwd(), proj.filename || `${name}-setup.exe`);
+  if (!fs.existsSync(dest)) {
+    console.log(retroErr(`  Project "${proj.name || name}" not downloaded yet. Use /get ${name} first.`));
+    return;
+  }
+  console.log(retro(`  Running ${retroAccent(proj.name || name)}...`));
+  execSync(`start "" "${dest}"`, { stdio: 'ignore' });
 }
 
 function doWrap(arg) {
