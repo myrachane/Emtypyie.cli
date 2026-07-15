@@ -290,8 +290,9 @@ async function doIssue(arg) {
 
 function runProject(name, proj) {
   if (proj.run) {
+    const runPath = path.resolve(t.getDevDir(name), proj.run);
     console.log(t.retro(`  Launching ${t.retroAccent(proj.name || name)}...`));
-    execSync(`start "" "${proj.run}"`, { stdio: 'ignore' });
+    execSync(`start "" "${runPath}"`, { stdio: 'ignore' });
     return;
   }
   const dest = path.join(t.getDevDir(name), proj.filename || `${name}-setup.exe`);
