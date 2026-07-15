@@ -292,7 +292,13 @@ function runProject(name, proj) {
   if (proj.run) {
     const runPath = path.resolve(t.getDevDir(name), proj.run);
     if (!fs.existsSync(runPath)) {
-      console.log(t.retroErr(`  "${proj.name || name}" not installed yet. Run /get ${name} first, then run the installer.`));
+      const installerPath = path.resolve(t.getDevDir(name), proj.filename);
+      if (fs.existsSync(installerPath)) {
+        console.log(t.retro(`  Running installer for ${t.retroAccent(proj.name || name)}...`));
+        execSync(`start "" "${installerPath}"`, { stdio: 'ignore' });
+        return;
+      }
+      console.log(t.retroErr(`  "${proj.name || name}" not downloaded yet. Run /get ${name} first.`));
       return;
     }
     console.log(t.retro(`  Launching ${t.retroAccent(proj.name || name)}...`));
