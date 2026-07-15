@@ -3,7 +3,7 @@
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const chalk = require('chalk');
 const getCommand = require('./commands/get');
 const bakafetch = require('./commands/bakafetch');
@@ -288,6 +288,10 @@ async function doIssue(arg) {
   }
 }
 
+function launch(path) {
+  spawn(path, [], { detached: true, stdio: 'ignore' }).unref();
+}
+
 function runProject(name, proj) {
   if (proj.run) {
     const runPath = path.resolve(t.getDevDir(name), proj.run);
@@ -295,14 +299,14 @@ function runProject(name, proj) {
       const installerPath = path.resolve(t.getDevDir(name), proj.filename);
       if (fs.existsSync(installerPath)) {
         console.log(t.retro(`  Running installer for ${t.retroAccent(proj.name || name)}...`));
-        execSync(`start "" "${installerPath}"`, { stdio: 'ignore' });
+        launch(installerPath);
         return;
       }
       console.log(t.retroErr(`  "${proj.name || name}" not downloaded yet. Run /get ${name} first.`));
       return;
     }
     console.log(t.retro(`  Launching ${t.retroAccent(proj.name || name)}...`));
-    execSync(`start "" "${runPath}"`, { stdio: 'ignore' });
+    launch(runPath);
     return;
   }
   const dest = path.join(t.getDevDir(name), proj.filename || `${name}-setup.exe`);
@@ -311,7 +315,7 @@ function runProject(name, proj) {
     return;
   }
   console.log(t.retro(`  Running ${t.retroAccent(proj.name || name)} installer...`));
-  execSync(`start "" "${dest}"`, { stdio: 'ignore' });
+  launch(dest);
 }
 
 function doUpdate() {
