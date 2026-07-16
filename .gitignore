@@ -4,3 +4,4 @@ node_modules/
 npm_token.txt
 dist/
 dev/
+mainsite/

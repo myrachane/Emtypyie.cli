@@ -175,9 +175,10 @@ async function showHelp() {
 
 function getReleaseDate() {
   try {
-    return execSync('git log -1 --format=%ad --date=short', { encoding: 'utf8', timeout: 5000 }).toString().trim();
+    return execSync('git log -1 --format=%ad --date=short', { encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
   } catch {
-    return 'unknown';
+    const pkg = require('./package.json');
+    return pkg.releaseDate || 'unknown';
   }
 }
 

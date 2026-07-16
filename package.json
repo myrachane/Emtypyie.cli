@@ -1,6 +1,7 @@
 {
   "name": "emtypyie-cli",
-  "version": "2.1.0",
+  "version": "2.1.2",
+  "releaseDate": "2026-07-16",
   "description": "EMTYPYIE CLI — Run emtypyie projects from your terminal with ease",
   "main": "cli.js",
   "bin": {
