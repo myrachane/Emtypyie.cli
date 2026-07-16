@@ -171,13 +171,12 @@ void bakafetch_show(void) {
     snprintf(mem_line, sizeof(mem_line), "%lld / %lld MB", free_ram, total_ram);
 
     printf("\n");
-    printf("        %s\n", retro_dim("          .---."));
-    printf("        %s\n", retro_dim("         /     \\"));
-    printf("        %s%s%s\n", retro_dim("        |  ("), retro_accent("o"), retro_dim(")"));
-    printf("        %s\n", retro_dim("        |     / \\"));
-    printf("        %s\n", retro_dim("        |   /   |"));
-    printf("        %s\n", retro_dim("        '--'    |"));
-    printf("        %s\n", retro_dim("             __/"));
+    printf("        %s\n", retro_dim("         ,---."));
+    printf("        %s\n", retro_dim("        /     \\"));
+    printf("        %s%s%s%s%s\n", retro_dim("       |  "), retro_accent("o"), retro_dim(" "), retro_accent("o"), retro_dim("  |"));
+    printf("        %s\n", retro_dim("       |   ^   |"));
+    printf("        %s\n", retro_dim("        \\  ~  /"));
+    printf("        %s\n", retro_dim("         '---'"));
     printf("\n");
     printf("  %s  %s\n", retro_accent("OS:"),         retro_dim(os));
     printf("  %s  %s\n", retro_accent("CPU:"),        retro_dim(cpu_line));
