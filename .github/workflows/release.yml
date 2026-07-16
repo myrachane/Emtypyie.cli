@@ -13,6 +13,9 @@ jobs:
     runs-on: windows-latest
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
+    defaults:
+      run:
+        working-directory: root4node
     steps:
       - uses: actions/checkout@v4
 
@@ -52,13 +55,16 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            dist/emtypyie.exe
-            dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip
-            dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip.sha256
+            root4node/dist/emtypyie.exe
+            root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip
+            root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip.sha256
 
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: root4node
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,7 +1,0 @@
-*.txt
-dist/
-manifests/
-.github/
-dev/
-mainsite/
-choco/
