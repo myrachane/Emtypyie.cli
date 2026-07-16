@@ -10,6 +10,7 @@ const auth = require('./commands/auth');
 const publish = require('./commands/publish');
 const bakafetch = require('./commands/bakafetch');
 const fetch = require('./commands/fetch');
+const runtime = require('./commands/install-runtime');
 
 const t = require('./commands/theme');
 
@@ -131,6 +132,7 @@ async function showHelp() {
   console.log(t.retroDim('  ─── Commands ───'));
   console.log();
   console.log(t.retro('  /get <project>') + t.retroDim('     install a project'));
+  console.log(t.retro('  /get gcc') + t.retroDim('           auto-install GCC/G++ compiler'));
   console.log(t.retro('  /flash <project>') + t.retroDim('   re-download latest version'));
   console.log(t.retro('  /info <project>') + t.retroDim('    show project details'));
   console.log(t.retro('  /rm <project>') + t.retroDim('      delete project files'));
@@ -234,14 +236,19 @@ async function doGet(name) {
     console.log(t.retroErr('  Specify a project: /get <project>'));
     return;
   }
+  const lower = name.toLowerCase();
+  if (lower === 'gcc' || lower === 'g++') {
+    await runtime.installCompiler(lower);
+    return;
+  }
   let proj;
   try {
-    proj = await fetch.fetchProject(name.toLowerCase());
+    proj = await fetch.fetchProject(lower);
   } catch (err) {
     console.log(t.retroErr(err.message));
     return;
   }
-  await getCommand.install(name.toLowerCase(), proj);
+  await getCommand.install(lower, proj);
 }
 
 async function doFlash(name) {

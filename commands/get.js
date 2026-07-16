@@ -133,4 +133,4 @@ async function install(name, project) {
   console.log();
 }
 
-module.exports = { install };
+module.exports = { install, download };
