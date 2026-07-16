@@ -6,6 +6,8 @@ github_token.txt
 choco_api_key.txt
 root4node/node_modules/
 root4node/dist/
+dist/
 dev/
 mainsite/
 choco/*.nupkg
+root4c/build/
