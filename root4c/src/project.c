@@ -11,89 +11,132 @@
 #define API_BASE "https://cdn.emtypyie.in/dev"
 #define MAX_LINE 1024
 
+/* ---- JSON helpers (simple, for known shapes only) ---- */
+
+static char* json_string(const char *json, const char *key) {
+    char *p = strstr(json, key);
+    if (!p) return NULL;
+    p += strlen(key);
+    while (*p && *p != '"') p++;
+    if (!*p) return NULL;
+    p++;
+    char *end = strchr(p, '"');
+    if (!end) return NULL;
+    size_t len = end - p;
+    char *val = malloc(len + 1);
+    memcpy(val, p, len);
+    val[len] = '\0';
+    return val;
+}
+
+/* ---- project metadata from /{name}/metadata.json ---- */
+
 typedef struct {
     char name[128];
     char version[64];
     char description[512];
-    char author[128];
-} ProjectInfo;
+    char download[1024];
+    char repo[512];
+} ProjectMeta;
 
-static int parse_project_json(const char *json, ProjectInfo *info) {
-    memset(info, 0, sizeof(ProjectInfo));
-
-    char *p;
-    p = strstr(json, "\"name\":");
-    if (p) {
-        p += 7; while (*p && *p != '"') p++;
-        if (*p) { p++; int i = 0; while (*p && *p != '"' && i < 127) info->name[i++] = *p++; }
-    }
-    p = strstr(json, "\"version\":");
-    if (p) {
-        p += 10; while (*p && *p != '"') p++;
-        if (*p) { p++; int i = 0; while (*p && *p != '"' && i < 63) info->version[i++] = *p++; }
-    }
-    p = strstr(json, "\"description\":");
-    if (p) {
-        p += 14; while (*p && *p != '"') p++;
-        if (*p) { p++; int i = 0; while (*p && *p != '"' && i < 511) info->description[i++] = *p++; }
-    }
-    return (strlen(info->name) > 0) ? 1 : 0;
+static int parse_metadata(const char *json, ProjectMeta *m) {
+    memset(m, 0, sizeof(*m));
+    char *v;
+    v = json_string(json, "\"name\":");      if (v) { strncpy(m->name, v, sizeof(m->name)-1); free(v); }
+    v = json_string(json, "\"version\":");   if (v) { strncpy(m->version, v, sizeof(m->version)-1); free(v); }
+    v = json_string(json, "\"description\":"); if (v) { strncpy(m->description, v, sizeof(m->description)-1); free(v); }
+    v = json_string(json, "\"download\":");  if (v) { strncpy(m->download, v, sizeof(m->download)-1); free(v); }
+    v = json_string(json, "\"repo\":");      if (v) { strncpy(m->repo, v, sizeof(m->repo)-1); free(v); }
+    return strlen(m->name) > 0;
 }
 
-static void print_project(ProjectInfo *info) {
-    printf("  %s %s %s\n", retro_accent(info->name), retro_dim("v"), retro_dim(info->version));
-    if (strlen(info->description) > 0)
-        printf("    %s\n", retro_dim(info->description));
+/* ---- parse the project list from meta.json ---- */
+
+static void list_from_project_array(const char *json) {
+    const char *p = json;
+    int in_obj = 0;
+    char name[128], version[64], desc[512];
+    while (*p) {
+        if (*p == '{') in_obj = 1;
+        else if (*p == '}') in_obj = 0;
+        else if (*p == '"') {
+            p++;
+            const char *end = strchr(p, '"');
+            if (!end) break;
+            if (!in_obj) {
+                /* array of plain strings: project name */
+                size_t len = end - p;
+                if (len > 0 && len < sizeof(name)) {
+                    memcpy(name, p, len); name[len] = '\0';
+                    printf("  %s\n", retro_accent(name));
+                }
+            } else {
+                /* inside an object, collect key + value */
+                size_t klen = end - p;
+                char key[64];
+                if (klen < sizeof(key)) {
+                    memcpy(key, p, klen); key[klen] = '\0';
+                    p = end + 1;
+                    while (*p && *p != ':') p++;
+                    if (*p) p++;
+                    while (*p && *p == ' ') p++;
+                    if (*p == '"') {
+                        p++;
+                        const char *v_end = strchr(p, '"');
+                        if (v_end) {
+                            size_t vlen = v_end - p;
+                            char val[1024];
+                            if (vlen < sizeof(val)) {
+                                memcpy(val, p, vlen); val[vlen] = '\0';
+                                if (strcmp(key, "name") == 0) strncpy(name, val, sizeof(name)-1);
+                                else if (strcmp(key, "version") == 0) strncpy(version, val, sizeof(version)-1);
+                                else if (strcmp(key, "description") == 0) strncpy(desc, val, sizeof(desc)-1);
+                            }
+                            p = v_end;
+                        }
+                    }
+                }
+                /* when object ends, print the collected entry */
+                if (*p == '}') {
+                    in_obj = 0;
+                    printf("  %s", retro_accent(name));
+                    if (strlen(version)) printf("  %s%s", retro_dim("v"), retro_dim(version));
+                    if (strlen(desc)) printf("  %s", retro_dim(desc));
+                    printf("\n");
+                    name[0] = version[0] = desc[0] = '\0';
+                }
+            }
+            p = end + 1;
+        } else p++;
+    }
 }
+
+/* ---- public API ---- */
 
 void project_list(void) {
     printf("\n");
 
-    char *emty_dev = get_emty_dir();
-    char dev_path[1024];
-    snprintf(dev_path, sizeof(dev_path), "%s%cdev", emty_dev, PATH_SEP);
+    char url[256];
+    snprintf(url, sizeof(url), "%s/meta.json", API_BASE);
 
-    if (!dir_exists(dev_path)) {
-        printf("  %s\n", retro_dim("No projects installed yet."));
+    FetchResult *res = fetch_get(url);
+    if (!res || res->status_code != 200) {
+        printf("  %s\n", retro_dim("(Could not fetch project list)"));
+        fetch_free(res);
+        printf("\n");
         return;
     }
 
-    DIR *d = opendir(dev_path);
-    if (!d) {
-        printf("  %s\n", retro_dim("No projects installed."));
-        free(emty_dev);
-        return;
-    }
-
-    printf("  %s\n", retro_accent("Installed projects:"));
-    struct dirent *entry;
-    int count = 0;
-    while ((entry = readdir(d)) != NULL) {
-        if (entry->d_name[0] == '.') continue;
-        char meta_path[1024];
-        snprintf(meta_path, sizeof(meta_path), "%s%c%s%c.emtypyie.json", dev_path, PATH_SEP, entry->d_name, PATH_SEP);
-        char *json = read_file(meta_path);
-        if (json) {
-            ProjectInfo info;
-            parse_project_json(json, &info);
-            print_project(&info);
-            free(json);
-        } else {
-            printf("  %s %s\n", retro_accent(entry->d_name), retro_dim("(unknown)"));
-        }
-        count++;
-    }
-    if (count == 0) {
-        printf("  %s\n", retro_dim("No projects installed."));
-    }
-    closedir(d);
+    printf("  %s\n", retro_accent("Available projects:"));
+    list_from_project_array(res->body);
+    fetch_free(res);
     printf("\n");
 }
 
 void project_info(const char *name) {
     printf("\n");
     char url[512];
-    snprintf(url, sizeof(url), "%s/info/%s", API_BASE, name);
+    snprintf(url, sizeof(url), "%s/%s/metadata.json", API_BASE, name);
 
     printf("  %s %s...\n", retro_dim("Fetching info for"), retro_accent(name));
     FetchResult *res = fetch_get(url);
@@ -103,11 +146,13 @@ void project_info(const char *name) {
         return;
     }
 
-    ProjectInfo info;
-    if (parse_project_json(res->body, &info)) {
-        printf("  %s  %s\n", retro_accent("Name:"),        retro_dim(info.name));
-        printf("  %s  %s\n", retro_accent("Version:"),     retro_dim(info.version));
-        printf("  %s  %s\n", retro_accent("Description:"), retro_dim(info.description));
+    ProjectMeta m;
+    if (parse_metadata(res->body, &m)) {
+        printf("  %s  %s\n", retro_accent("Name:"),        retro_dim(m.name));
+        printf("  %s  %s\n", retro_accent("Version:"),     retro_dim(m.version));
+        printf("  %s  %s\n", retro_accent("Description:"), retro_dim(m.description));
+        if (strlen(m.repo))
+            printf("  %s  %s\n", retro_accent("Repo:"), retro_dim(m.repo));
     } else {
         printf("  %s\n", res->body);
     }
@@ -118,15 +163,10 @@ void project_info(const char *name) {
 void project_get(const char *name) {
     printf("\n");
 
-    char *dev_dir = get_dev_dir(name);
-
-    char url[512];
-    snprintf(url, sizeof(url), "%s/get/%s", API_BASE, name);
-
     char meta_url[512];
-    snprintf(meta_url, sizeof(meta_url), "%s/info/%s", API_BASE, name);
+    snprintf(meta_url, sizeof(meta_url), "%s/%s/metadata.json", API_BASE, name);
 
-    printf("  %s %s %s\n", retro_dim("Fetching"), retro_accent(name), retro_dim("from registry..."));
+    printf("  %s %s\n", retro_dim("Fetching"), retro_accent(name));
     FetchResult *meta = fetch_get(meta_url);
     if (!meta || meta->status_code != 200) {
         printf("  %s %s\n", retro_err("Project not found:"), retro_dim(name));
@@ -134,39 +174,54 @@ void project_get(const char *name) {
         return;
     }
 
-    ProjectInfo info;
+    ProjectMeta m;
     char *meta_body = strdup(meta->body);
-    parse_project_json(meta_body, &info);
+    parse_metadata(meta_body, &m);
     fetch_free(meta);
 
-    if (strlen(info.version) > 0) {
-        printf("  %s %s\n", retro_dim("Latest version:"), retro_accent(info.version));
-    }
+    if (strlen(m.version))
+        printf("  %s %s\n", retro_dim("Version:"), retro_accent(m.version));
+    if (strlen(m.repo))
+        printf("  %s %s\n", retro_dim("Repo:"),   retro_dim(m.repo));
 
-    char dest_zip[1024];
-    snprintf(dest_zip, sizeof(dest_zip), "%s%cproject.zip", dev_dir, PATH_SEP);
+    char *dev_dir = get_dev_dir(name);
 
-    if (download_file(url, dest_zip)) {
-        printf("  %s\n", retro("Extracting..."));
+    if (strlen(m.download) > 0) {
+        char dest[1024];
+        snprintf(dest, sizeof(dest), "%s%c%s", dev_dir, PATH_SEP,
+                 strstr(m.download, ".zip") ? "project.zip" : "download.bin");
+
+        if (download_file(m.download, dest)) {
+            printf("  %s\n", retro("Extracting..."));
 #ifdef _WIN32
-        char extract_cmd[2048];
-        snprintf(extract_cmd, sizeof(extract_cmd), "powershell -Command \"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"", dest_zip, dev_dir);
-        exec_cmd_silent(extract_cmd);
+            char extract_cmd[2048];
+            snprintf(extract_cmd, sizeof(extract_cmd),
+                "powershell -Command \"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"", dest, dev_dir);
+            exec_cmd_silent(extract_cmd);
 #else
-        char extract_cmd[2048];
-        snprintf(extract_cmd, sizeof(extract_cmd), "unzip -o '%s' -d '%s'", dest_zip, dev_dir);
-        system(extract_cmd);
+            char extract_cmd[2048];
+            snprintf(extract_cmd, sizeof(extract_cmd), "unzip -o '%s' -d '%s'", dest, dev_dir);
+            system(extract_cmd);
 #endif
-        remove(dest_zip);
+            remove(dest);
 
-        char meta_file[1024];
-        snprintf(meta_file, sizeof(meta_file), "%s%c.emtypyie.json", dev_dir, PATH_SEP);
-        write_file(meta_file, meta_body);
+            char meta_file[1024];
+            snprintf(meta_file, sizeof(meta_file), "%s%c.emtypyie.json", dev_dir, PATH_SEP);
+            write_file(meta_file, meta_body);
 
-        printf("  %s %s %s\n", retro_accent(name), retro_dim("installed to"), retro_dim(dev_dir));
+            printf("  %s %s %s\n", retro_accent(name), retro_dim("installed to"), retro_dim(dev_dir));
+        } else {
+            printf("  %s %s\n", retro_err("Failed to download:"), retro_dim(name));
+        }
     } else {
-        printf("  %s %s\n", retro_err("Failed to download:"), retro_dim(name));
+        /* no download URL — maybe a meta-only project */
+        printf("  %s %s\n", retro_accent(name), retro_dim("(meta only, nothing to download)"));
     }
+
+    if (strlen(m.description)) {
+        printf("\n  %s\n", retro_dim(m.description));
+    }
+
     free(meta_body);
     printf("\n");
 }
