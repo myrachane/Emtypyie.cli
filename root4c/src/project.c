@@ -364,12 +364,11 @@ bool project_run(const char *name) {
         snprintf(spawn_cmd, sizeof(spawn_cmd), "\"%s\"", run_path);
     }
 
-    printf("  %s %s\n", retro("Launching"), retro_accent(name));
-    if (!spawn_detached(spawn_cmd)) {
-        printf("  %s\n", retro_err("Failed to launch project."));
-        free(dev_dir);
-        cJSON_Delete(json);
-        return false;
+    printf("\n");
+    int rc = system(spawn_cmd);
+    printf("\n");
+    if (rc != 0) {
+        printf("  %s (exit code %d)\n", retro_err("Project exited with error:"), rc);
     }
 
     free(dev_dir);

@@ -381,6 +381,20 @@ function launch(path) {
   }
 }
 
+function isScript(path) {
+  return /\.(bat|cmd|py|sh)$/i.test(path);
+}
+
+function runSync(path) {
+  const isBat = /\.bat$|\.cmd$/i.test(path);
+  if (isBat) {
+    const cmd = `${process.env.COMSPEC || 'cmd.exe'} /c "${path}"`;
+    execSync(cmd, { stdio: 'inherit', timeout: 0 });
+  } else {
+    execSync(`"${path}"`, { stdio: 'inherit', timeout: 0 });
+  }
+}
+
 async function runProject(name) {
   let proj;
   try {
@@ -389,29 +403,25 @@ async function runProject(name) {
     console.log(t.retroErr(err.message));
     return;
   }
-  if (proj.run) {
-    const runPath = path.resolve(t.getDevDir(name), proj.run);
-    if (!fs.existsSync(runPath)) {
-      const installerPath = path.resolve(t.getDevDir(name), proj.filename);
-      if (fs.existsSync(installerPath)) {
-        console.log(t.retro(`  Running installer for ${t.retroAccent(proj.name || name)}...`));
-        launch(installerPath);
-        return;
-      }
-      console.log(t.retroErr(`  "${proj.name || name}" not downloaded yet. Run /get ${name} first.`));
-      return;
+  const runTarget = proj.run || proj.filename;
+  if (!runTarget) {
+    console.log(t.retroErr(`  Project "${name}" has no run target.`));
+    return;
+  }
+  const runPath = path.resolve(t.getDevDir(name), runTarget);
+  if (!fs.existsSync(runPath)) {
+    console.log(t.retroErr(`  "${name}" not downloaded yet. Run /get ${name} first.`));
+    return;
+  }
+  if (isScript(runTarget)) {
+    console.log(t.retro(`  Running ${t.retroAccent(proj.name || name)}...`));
+    try { runSync(runPath); } catch (e) {
+      console.log(t.retroErr(`  Project exited with error: ${e.message}`));
     }
+  } else {
     console.log(t.retro(`  Launching ${t.retroAccent(proj.name || name)}...`));
     launch(runPath);
-    return;
   }
-  const dest = path.join(t.getDevDir(name), proj.filename || `${name}-setup.exe`);
-  if (!fs.existsSync(dest)) {
-    console.log(t.retroErr(`  Project "${proj.name || name}" not downloaded yet. Use /get ${name} first.`));
-    return;
-  }
-  console.log(t.retro(`  Running ${t.retroAccent(proj.name || name)} installer...`));
-  launch(dest);
 }
 
 function doUpdate() {
