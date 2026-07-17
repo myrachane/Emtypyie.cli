@@ -58,6 +58,11 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
     if (!hSession) return res;
 
+    if (timeout_sec > 0) {
+        int ms = timeout_sec * 1000;
+        WinHttpSetTimeouts(hSession, ms, ms, -1, -1);
+    }
+
     HINTERNET hConnect = WinHttpConnect(hSession, host, port, 0);
     if (!hConnect) { WinHttpCloseHandle(hSession); return res; }
 
@@ -67,8 +72,8 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
     if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return res; }
 
     if (timeout_sec > 0) {
-        DWORD to = timeout_sec * 1000;
-        WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT, &to, sizeof(to));
+        int ms = timeout_sec * 1000;
+        WinHttpSetTimeouts(hRequest, -1, -1, ms, ms);
     }
 
     if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,

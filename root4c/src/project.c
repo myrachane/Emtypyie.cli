@@ -52,62 +52,87 @@ static int parse_metadata(const char *json, ProjectMeta *m) {
 
 /* ---- parse the project list from meta.json ---- */
 
+static void skip_json(const char **pp) {
+    int depth = 0;
+    do {
+        if (**pp == '{' || **pp == '[') depth++;
+        else if (**pp == '}' || **pp == ']') depth--;
+        else if (**pp == '"') {
+            (*pp)++;
+            while (**pp && **pp != '"') { if (**pp == '\\' && *(*pp+1)) (*pp)++; (*pp)++; }
+        }
+        if (depth > 0) (*pp)++;
+    } while (depth > 0 && **pp);
+    if (**pp) (*pp)++;
+}
+
 static void list_from_project_array(const char *json) {
-    const char *p = json;
-    int in_obj = 0;
-    char name[128], version[64], desc[512];
-    while (*p) {
-        if (*p == '{') in_obj = 1;
-        else if (*p == '}') in_obj = 0;
-        else if (*p == '"') {
-            p++;
-            const char *end = strchr(p, '"');
-            if (!end) break;
-            if (!in_obj) {
-                /* array of plain strings: project name */
-                size_t len = end - p;
-                if (len > 0 && len < sizeof(name)) {
-                    memcpy(name, p, len); name[len] = '\0';
-                    printf("  %s\n", retro_accent(name));
-                }
-            } else {
-                /* inside an object, collect key + value */
-                size_t klen = end - p;
-                char key[64];
-                if (klen < sizeof(key)) {
-                    memcpy(key, p, klen); key[klen] = '\0';
-                    p = end + 1;
-                    while (*p && *p != ':') p++;
-                    if (*p) p++;
-                    while (*p && *p == ' ') p++;
-                    if (*p == '"') {
-                        p++;
-                        const char *v_end = strchr(p, '"');
-                        if (v_end) {
-                            size_t vlen = v_end - p;
-                            char val[1024];
-                            if (vlen < sizeof(val)) {
-                                memcpy(val, p, vlen); val[vlen] = '\0';
-                                if (strcmp(key, "name") == 0) strncpy(name, val, sizeof(name)-1);
-                                else if (strcmp(key, "version") == 0) strncpy(version, val, sizeof(version)-1);
-                                else if (strcmp(key, "description") == 0) strncpy(desc, val, sizeof(desc)-1);
-                            }
-                            p = v_end;
+    const char *p = json, *q;
+    char name[128] = {0}, version[64] = {0}, desc[512] = {0};
+
+    /* find the first '[' after "projects" — but handle both formats */
+    /* format 1: array of strings ["a","b"] */
+    /* format 2: {"projects":["a","b"]} or {"projects":[{"name":"a",...}]} */
+
+    /* skip to the first array */
+    while (*p && *p != '[') p++;
+    if (!*p) return;
+    p++; /* skip '[' */
+
+    while (*p && *p != ']') {
+        while (*p && *p != '"' && *p != ']') p++;
+        if (!*p || *p == ']') break;
+        p++; /* skip opening quote */
+        if (!*p) break;
+        q = strchr(p, '"');
+        if (!q) break;
+
+        /* check if next non-space after quote is ':' — object format */
+        const char *t = q + 1;
+        while (*t && *t == ' ') t++;
+        if (*t == ':') {
+            /* object: read key-value pairs */
+            size_t klen = q - p;
+            if (klen < sizeof(name)) {
+                memcpy(name, p, klen); name[klen] = '\0';
+                p = t + 1;
+                while (*p == ' ') p++;
+                if (*p == '"') {
+                    p++;
+                    const char *ve = strchr(p, '"');
+                    if (ve) {
+                        size_t vlen = ve - p;
+                        char val[1024];
+                        if (vlen < sizeof(val)) {
+                            memcpy(val, p, vlen); val[vlen] = '\0';
+                            if      (strcmp(name, "name") == 0)        strncpy(name, val, sizeof(name)-1);
+                            else if (strcmp(name, "version") == 0)    strncpy(version, val, sizeof(version)-1);
+                            else if (strcmp(name, "description") == 0) strncpy(desc, val, sizeof(desc)-1);
                         }
+                        p = ve + 1;
                     }
                 }
-                /* when object ends, print the collected entry */
-                if (*p == '}') {
-                    in_obj = 0;
-                    printf("  %s", retro_accent(name));
-                    if (strlen(version)) printf("  %s%s", retro_dim("v"), retro_dim(version));
-                    if (strlen(desc)) printf("  %s", retro_dim(desc));
-                    printf("\n");
-                    name[0] = version[0] = desc[0] = '\0';
-                }
             }
-            p = end + 1;
-        } else p++;
+            skip_json(&p);
+            /* at '}' — print and reset */
+            printf("  %s", retro_accent(strlen(name) ? name : "?"));
+            if (strlen(version)) printf("  %s%s", retro_dim("v"), retro_dim(version));
+            if (strlen(desc))    printf("  %s", retro_dim(desc));
+            printf("\n");
+            name[0] = version[0] = desc[0] = '\0';
+            while (*p && *p != ',' && *p != ']') p++;
+            if (*p == ',') p++;
+        } else {
+            /* plain string */
+            size_t len = q - p;
+            if (len > 0 && len < sizeof(name)) {
+                memcpy(name, p, len); name[len] = '\0';
+                printf("  %s\n", retro_accent(name));
+            }
+            p = q + 1;
+            while (*p && *p != ',' && *p != ']') p++;
+            if (*p == ',') p++;
+        }
     }
 }
 
@@ -119,7 +144,7 @@ void project_list(void) {
     char url[256];
     snprintf(url, sizeof(url), "%s/meta.json", API_BASE);
 
-    FetchResult *res = fetch_get(url);
+    FetchResult *res = fetch_get_with_timeout(url, 5);
     if (!res || res->status_code != 200) {
         printf("  %s\n", retro_dim("(Could not fetch project list)"));
         fetch_free(res);
@@ -139,7 +164,7 @@ void project_info(const char *name) {
     snprintf(url, sizeof(url), "%s/%s/metadata.json", API_BASE, name);
 
     printf("  %s %s...\n", retro_dim("Fetching info for"), retro_accent(name));
-    FetchResult *res = fetch_get(url);
+    FetchResult *res = fetch_get_with_timeout(url, 10);
     if (!res || res->status_code != 200) {
         printf("  %s %s\n", retro_err("Project not found:"), retro_dim(name));
         fetch_free(res);
@@ -167,7 +192,7 @@ void project_get(const char *name) {
     snprintf(meta_url, sizeof(meta_url), "%s/%s/metadata.json", API_BASE, name);
 
     printf("  %s %s\n", retro_dim("Fetching"), retro_accent(name));
-    FetchResult *meta = fetch_get(meta_url);
+    FetchResult *meta = fetch_get_with_timeout(meta_url, 10);
     if (!meta || meta->status_code != 200) {
         printf("  %s %s\n", retro_err("Project not found:"), retro_dim(name));
         fetch_free(meta);
