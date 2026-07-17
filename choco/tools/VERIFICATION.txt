@@ -5,8 +5,8 @@ emtypyie-cli is distributed as a portable zip archive from GitHub Releases.
 The zip is built from source at:
   https://github.com/myrachane/emtypyie-cli
 
-SHA256 checksum (emtypyie-cli-windows-x64-2.1.3.zip):
-  5A30708B92271EC63F46B9AA8E27D68E86AB7EAB604CD58AD5AABEF4CE7412D3
+SHA256 checksum (emtypyie-cli-windows-x64-2.2.0.zip):
+  7DA18D2FBA36415DE0385B5739D2570660C3C421871D8E42EEF2E3465F83C3CB
 
 To verify:
-  Get-FileHash "emtypyie-cli-windows-x64-2.1.3.zip" -Algorithm SHA256
+  Get-FileHash "emtypyie-cli-windows-x64-2.2.0.zip" -Algorithm SHA256

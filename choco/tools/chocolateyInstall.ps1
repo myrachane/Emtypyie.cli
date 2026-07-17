@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
 $packageName = 'emtypyie-cli'
-$url = 'https://github.com/myrachane/emtypyie-cli/releases/download/v2.1.3/emtypyie-cli-windows-x64-2.1.3.zip'
-$checksum = '5A30708B92271EC63F46B9AA8E27D68E86AB7EAB604CD58AD5AABEF4CE7412D3'
+$url = 'https://github.com/myrachane/emtypyie-cli/releases/download/v2.2.0/emtypyie-cli-windows-x64-2.2.0.zip'
+$checksum = '7DA18D2FBA36415DE0385B5739D2570660C3C421871D8E42EEF2E3465F83C3CB'
 $checksumType = 'sha256'
 
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"

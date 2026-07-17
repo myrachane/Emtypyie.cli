@@ -22,7 +22,7 @@ bool download_file(const char *url, const char *dest_path) {
     char cmd[4096];
     snprintf(cmd, sizeof(cmd),
         "powershell -Command \"$wc = New-Object System.Net.WebClient; "
-        "$wc.Headers.Add('User-Agent', 'emtypyie-cli/2.1.3'); "
+        "$wc.Headers.Add('User-Agent', 'emtypyie-cli/2.2.0'); "
         "$wc.DownloadFile('%s', '%s')\"",
         url, dest_path);
     if (!exec_cmd_silent(cmd)) {
@@ -45,7 +45,7 @@ bool download_file(const char *url, const char *dest_path) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "emtypyie-cli/2.1.3");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "emtypyie-cli/2.2.0");
 
     CURLcode rc = curl_easy_perform(curl);
     fclose(f);

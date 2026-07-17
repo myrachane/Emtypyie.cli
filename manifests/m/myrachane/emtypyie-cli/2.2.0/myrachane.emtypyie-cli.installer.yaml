@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+
+PackageIdentifier: myrachane.emtypyie-cli
+PackageVersion: 2.2.0
+InstallerLocale: en-US
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+  - RelativeFilePath: emtypyie.exe
+    PortableCommandAlias: emtypyie
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/myrachane/emtypyie-cli/releases/download/v2.2.0/emtypyie-cli-windows-x64-2.2.0.zip
+    InstallerSha256: 7DA18D2FBA36415DE0385B5739D2570660C3C421871D8E42EEF2E3465F83C3CB
+ManifestType: installer
+ManifestVersion: 1.6.0
