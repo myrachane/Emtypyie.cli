@@ -359,6 +359,8 @@ static int find_completions(const char *input, char out[MAX_COMMANDS][256]) {
 
 void shell_run(void) {
     printf("%s", retro(BANNER));
+    printf("  %s\n", retro_accent("EMTYPYIE CLI v2.5.1"));
+    printf("  %s\n", retro_dim("\"Wandering Witches\""));
     printf("\n");
     printf("  %s\n", retro_dim("─────────────────────────────────────────────"));
     printf("  %s", retro("\"code. create. conquer.\""));

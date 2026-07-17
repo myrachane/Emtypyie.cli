@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
         ));
         printf("\n");
         printf("  %s  %s\n", retro_dim("Release:"), retro_accent("Wandering Witches"));
-        printf("  %s  %s\n", retro_dim("Copyright 2026 EMTYPYIE. All rights reserved."));
+        printf("  %s\n", retro_dim("Copyright 2026 EMTYPYIE. All rights reserved."));
     }
     else if (strcmp(cmd, "/get") == 0) {
         if (strlen(arg) == 0) { printf("  Specify a project.\n"); return 1; }

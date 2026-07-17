@@ -519,6 +519,9 @@ function interactive() {
 
   console.clear();
   console.log(BANNER);
+  console.log(t.retro('  EMTYPYIE CLI v2.5.1'));
+  console.log(t.retroDim('  "Wandering Witches"'));
+  console.log();
   console.log(t.retroDim(`
   ─────────────────────────────────────────────
   `) + t.retro('"code. create. conquer."') + t.retroDim(`
