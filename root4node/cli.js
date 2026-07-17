@@ -1,5 +1,22 @@
 #!/usr/bin/env node
 
+/* ─── emtypyie-cli main entry point (Node.js version) ───
+ * Provides an interactive shell (REPL) and direct command execution.
+ * Commands are dispatched via handleCommand().
+ *
+ * The Node.js version has more features than the C port:
+ *   /wrap (git staging, npm publish, GitHub repo creation)
+ *   /issue (file GitHub issues with optional -m message)
+ *   Automatic project execution (run installed projects)
+ *   Tab completion via readline
+ *
+ * Future work:
+ *  - Port /wrap, /issue to the C version.
+ *  - Add unit tests for all command handlers.
+ *  - Fetch command list from cdn (dynamic discovery).
+ *  - Persistent shell history across sessions.
+ */
+
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
@@ -23,6 +40,7 @@ ___________        __                         .__                  .__  .__
         \\/      \\/      \\/      |__|   \\/             \\/  \\/     \\/ 
 `;
 
+/* Open a URL in the default browser (Windows-only). */
 function openBrowser(url) {
   try {
     execSync(`start ${url}`, { stdio: 'ignore' });

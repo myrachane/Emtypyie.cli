@@ -4,6 +4,16 @@ const API_HOST = 'cdn.emtypyie.in';
 const API_BASE = '/dev';
 const TIMEOUT = 10000;
 
+/* ─── CDN fetch module (Node.js) ───
+ * Provides HTTPS fetching from cdn.emtypyie.in for project metadata
+ * and project listing. All responses are JSON.
+ *
+ * Future work:
+ *  - Add local cache with TTL to reduce network calls.
+ *  - Add fallback mirrors if primary CDN is down.
+ *  - Support streaming for large payloads.
+ */
+
 function _get(path) {
   return new Promise((resolve, reject) => {
     const opts = {

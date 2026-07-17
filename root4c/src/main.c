@@ -6,6 +6,12 @@
 #include "shell.h"
 #include "util.h"
 
+/* ─── Main entry point ───
+ * Parses command-line arguments, loads saved theme, dispatches to handlers.
+ * To add a new command: add an else-if block in main() with the command
+ * string and call the corresponding handler (declared extern or in a header).
+ */
+
 static void print_usage(void) {
     printf("Usage: emtypyie [command] [args]\n");
     printf("\n");

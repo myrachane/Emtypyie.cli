@@ -12,6 +12,16 @@
 #include <curl/curl.h>
 #endif
 
+/* ─── File download module ───
+ * Downloads files via PowerShell (Windows) or libcurl (POSIX).
+ * Also provides download_zip_and_extract() for packaged content.
+ *
+ * Future work:
+ *  - Add progress bar during download.
+ *  - Add resume support for interrupted downloads.
+ *  - Add checksum verification after download.
+ */
+
 bool download_file(const char *url, const char *dest_path) {
     const char *fname = strrchr(url, '/');
     fname = fname ? fname + 1 : url;

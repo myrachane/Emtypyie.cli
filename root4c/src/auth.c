@@ -5,6 +5,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* ─── Authentication / environment variables module ───
+ * Prompts the user for tokens (NPM, GitHub, etc.) and stores them
+ * in ~/.emtypyie/env.json for use by other commands (/wrap npm publish, etc.).
+ *
+ * Future work:
+ *  - Read tokens from env.json in /wrap and other commands.
+ *  - Add GitHub token, Chocolatey API key support.
+ *  - Encrypt stored tokens at rest.
+ *  - Add /token list and /token remove subcommands.
+ */
+
 void auth_setenv(void) {
     printf("\n");
     printf("  %s\n", retro_accent("Set environment variables"));

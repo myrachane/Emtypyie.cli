@@ -12,6 +12,19 @@
 
 #include "bakafetch_data.h"
 
+/* ─── Bakafetch (system info + ASCII art) module ───
+ * Displays system information (OS, CPU, GPU, RAM, uptime) alongside
+ * a random ASCII art and a tsundere-style message.
+ *
+ * All get_*() functions are cross-platform (#ifdef _WIN32).
+ *
+ * Future work:
+ *  - Add disk usage, network stats, process count.
+ *  - Add package manager detection.
+ *  - User-customizable ASCII art packs (from ~/.emtypyie/arts/).
+ *  - GPU detection on Linux via lspci or NVML.
+ */
+
 static int art_width(const char *line) {
     int w = 0;
     while (*line) {

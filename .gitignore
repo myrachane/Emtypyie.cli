@@ -12,3 +12,4 @@ choco/*.nupkg
 root4c/build/
 *.zip
 *.zip.sha256
+mainsite/

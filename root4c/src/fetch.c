@@ -13,6 +13,20 @@
 #include <curl/curl.h>
 #endif
 
+/* ─── HTTP fetch module ───
+ * Makes HTTP GET requests. Uses WinHTTP on Windows, libcurl on POSIX.
+ *
+ * Future work:
+ *  - Add POST/PUT support for API interactions.
+ *  - Add progress callback for large downloads.
+ *  - Add support for custom headers (e.g., Authorization).
+ *
+ * Usage:
+ *   FetchResult *res = fetch_get_with_timeout("https://...", 30);
+ *   if (res && res->status_code == 200) { ... use res->body ... }
+ *   fetch_free(res);
+ */
+
 struct WriteBuf {
     char *data;
     size_t len;

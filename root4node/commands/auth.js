@@ -1,3 +1,13 @@
+/* ─── Auth/token management module (Node.js) ───
+ * Reads/writes environment tokens from ~/.emtypyie/.env (KEY=VALUE format).
+ * Used by /setenv for token input and by /wrap for GitHub/NPM operations.
+ *
+ * Future work:
+ *  - Encrypt stored tokens at rest.
+ *  - Add token expiry/warning notifications.
+ *  - Support Windows Credential Manager for secure storage.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const os = require('os');

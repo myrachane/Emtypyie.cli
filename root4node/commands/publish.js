@@ -1,3 +1,20 @@
+/* ─── Wrap/publish module (Node.js) ───
+ * Provides /wrap command functionality:
+ *   /wrap <dir>                  — git stage all changes
+ *   /wrap <dir> --commit -m "x"  — stage, commit, push
+ *   /wrap all                    — stage all subdirectories
+ *   /wrap npm publish            — auto-bump version & npm publish
+ *   /wrap repo "name"            — create GitHub repo & open PR
+ *
+ * Uses environment tokens from /setenv (GITHUB_TOKEN, NPM_TOKEN).
+ *
+ * Future work:
+ *  - Add /wrap choco push for automated Chocolatey releases.
+ *  - Add /wrap winget for automated Winget PR submission.
+ *  - Interactive conflict resolution for git operations.
+ *  - Dry-run mode (--dry-run) for all operations.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const os = require('os');

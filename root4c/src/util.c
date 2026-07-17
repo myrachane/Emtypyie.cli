@@ -15,6 +15,15 @@
 #include <pwd.h>
 #endif
 
+/* ─── Cross-platform utilities implementation ───
+ * Provides file I/O, directory management, and external process execution
+ * with platform-specific code guarded by #ifdef _WIN32.
+ *
+ * Future work:
+ *  - Add path_normalize() to convert backslashes on Windows.
+ *  - Replace snprintf-based path construction with a dynamic builder.
+ */
+
 char* path_join(const char *a, const char *b) {
     size_t la = strlen(a), lb = strlen(b);
     char *res = malloc(la + lb + 2);

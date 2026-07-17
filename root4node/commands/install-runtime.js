@@ -1,3 +1,14 @@
+/* ─── Runtime installer module (Node.js) ───
+ * Downloads and installs GCC/G++ via w64devkit for Windows.
+ * Uses 7zr (portable 7-Zip) for extraction.
+ *
+ * Future work:
+ *  - Add Linux/macOS support (apt, brew, etc.).
+ *  - Support multiple compiler versions.
+ *  - Install other runtimes (Node.js, Python, Rust).
+ *  - Verify installation with a test compile.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const os = require('os');

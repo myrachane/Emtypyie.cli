@@ -1,3 +1,14 @@
+<#
+.SYNOPSIS
+  Chocolatey install script for emtypyie-cli.
+.DESCRIPTION
+  Downloads the native Windows binary ZIP from GitHub Releases,
+  extracts it, and registers the emtypyie command via shim.
+.NOTES
+  The URL and checksum must match the C native build ZIP from
+  the release workflow (emtypyie-cli-native-windows-x64-*.zip).
+#>
+
 $ErrorActionPreference = 'Stop'
 
 $packageName = 'emtypyie-cli'

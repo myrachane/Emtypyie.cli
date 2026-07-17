@@ -1,3 +1,17 @@
+/* ─── Theme module (Node.js) ───
+ * Manages CLI color themes and persistent config (~/.emtypyie/config.json).
+ * Themes are chalk hex color wrappers stored as retro*() functions.
+ *
+ * To add a new theme:
+ *   1. Add entry to THEMES object with 5 hex colors.
+ *   2. Restart the CLI or run /theme <name>.
+ *
+ * Future work:
+ *  - User-custom themes via config.json "customTheme" field.
+ *  - Export/import themes.
+ *  - Per-project theme override.
+ */
+
 const chalk = require('chalk');
 const os = require('os');
 const fs = require('fs');

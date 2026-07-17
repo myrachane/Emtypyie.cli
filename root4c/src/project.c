@@ -8,6 +8,19 @@
 #include <string.h>
 
 
+/* ─── Project management module ───
+ * Lists, fetches, installs, flashes (re-downloads), removes, and opens docs
+ * for emtypyie projects.  Project metadata is fetched from cdn.emtypyie.in.
+ *
+ * JSON parsing is minimal and assumes known response shapes (no full JSON lib).
+ *
+ * Future work:
+ *  - Add a proper JSON parser (cJSON is already in lib/) for robustness.
+ *  - Add project search/filter by tags.
+ *  - Add dependency resolution between projects.
+ *  - Cache metadata locally to avoid repeated network calls.
+ */
+
 #define API_BASE "https://cdn.emtypyie.in/dev"
 #define MAX_LINE 1024
 

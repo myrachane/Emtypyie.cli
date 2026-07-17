@@ -219,8 +219,29 @@ static std::string detokenize(larpino_model *m, int tok) {
     return (tok>=0&&tok<(int)m->vocab.size())?m->vocab[tok]:"";
 }
 
-/* ─── public API ─── */
-
+/* ─── On-device LLM inference engine (larpino) ───
+ * Loads GGUF-format transformer models (Llama/LLaMA architecture) and
+ * runs inference for text generation.  Uses Q4_0 quantization for efficiency.
+ *
+ * Architecture: standard Llama decoder-only transformer with RoPE, RMS norm,
+ * SiLU-gated FFN, and KV-cache for autoregressive generation.
+ *
+ * Future work:
+ *  - Support Q8_0, Q4_K_M, and other quantization formats.
+ *  - Add token streaming callback for real-time display.
+ *  - Add system prompt / conversation history management.
+ *  - GPU acceleration via CUDA/Vulkan (compute shaders).
+ *  - Speculative decoding for faster generation.
+ *  - Grammar-constrained generation (GBNF-like).
+ *
+ * ─── Public API ───
+ *   larpino_load(path)       — Load a GGUF model file.
+ *   larpino_chat(m, prompt)  — Generate response to prompt.
+ *   larpino_stop(m)          — Stop generation (from another thread).
+ *   larpino_status(m, buf)   — Get model status string.
+ *   larpino_free(m)          — Free all resources.
+ *   larpino_is_loaded(m)     — Check if model is loaded.
+ */
 larpino_model* larpino_load(const char *path) {
     larpino_model *m=new larpino_model();
     FILE *f=fopen(path,"rb");

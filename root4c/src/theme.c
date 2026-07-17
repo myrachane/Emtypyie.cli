@@ -11,6 +11,20 @@
 static char ansi_bufs[ANSI_BUF_POOL][4096];
 static int ansi_idx = 0;
 
+/* ─── Terminal theming module ───
+ * Provides ANSI 24-bit color support via retro_*() functions.
+ * Themes are defined as hex color palettes. To add a new theme:
+ *   1. Add an entry to THEMES[] below with name + 5 hex colors.
+ *   2. Increment THEME_COUNT (or remove the hardcoded count).
+ *
+ * Theme color order: main, dim, accent, warn, err.
+ *
+ * Future work:
+ *  - User-defined custom themes (read from JSON file).
+ *  - True 24-bit color detection (COLORTERM env var).
+ *  - Background/border color support.
+ */
+
 static const Theme THEMES[] = {
     {"slate",  "#e2e8f0", "#64748b", "#38bdf8", "#fbbf24", "#f87171"},
     {"green",  "#33ff33", "#1a7a1a", "#66ff66", "#ffaa00", "#ff3333"},

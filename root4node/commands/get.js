@@ -8,6 +8,17 @@ const { execSync, spawn } = require('child_process');
 
 const t = require('./theme');
 
+/* ─── Project installer module (Node.js) ───
+ * Downloads project ZIPs from cdn.emtypyie.in, extracts them,
+ * and installs binaries to PATH via batch launcher.
+ *
+ * Future work:
+ *  - Add progress bar during download.
+ *  - Add checksum verification after download.
+ *  - Support selective file extraction.
+ *  - Rollback on failed installation.
+ */
+
 function downloadHttps(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);

@@ -6,6 +6,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* ─── Runtime installer module ───
+ * Downloads and installs development runtimes (currently GCC/G++ via w64devkit).
+ * Uses 7zr portable extractor for ZIP extraction on Windows.
+ *
+ * Future work:
+ *  - Support installing Node.js, Python, Rust, etc.
+ *  - Add version selection (not just latest).
+ *  - Add Linux/macOS package manager integration (apt, brew).
+ *  - Check for existing installations more thoroughly.
+ */
+
 #define W64DEVKIT_URL "https://github.com/skeeto/w64devkit/releases/download/v2.0.0/w64devkit-2.0.0.zip"
 #define SEVENZ_URL "https://www.7-zip.org/a/7zr.exe"
 
