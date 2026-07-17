@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-node:
     runs-on: windows-latest
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
@@ -48,6 +48,73 @@ jobs:
           $hash = (Get-FileHash dist\emtypyie-cli-windows-x64-$version.zip -Algorithm SHA256).Hash.ToLower()
           "$hash  dist\emtypyie-cli-windows-x64-$version.zip" | Out-File -FilePath dist\emtypyie-cli-windows-x64-$version.zip.sha256 -Encoding ascii
 
+      - name: Upload Node.js ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-build
+          path: root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
+          if-no-files-found: error
+
+  build-c:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        working-directory: root4c
+
+      - name: Build C native executable
+        run: cmake --build build --config Release
+        working-directory: root4c
+
+      - name: Package ZIP
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $exe = "build\Release\emtypyie.exe"
+          if (-not (Test-Path $exe)) { $exe = "build\emtypyie.exe" }
+          Compress-Archive -Path $exe -DestinationPath "emtypyie-cli-native-windows-x64-$version.zip" -Force
+          $hash = (Get-FileHash "emtypyie-cli-native-windows-x64-$version.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  emtypyie-cli-native-windows-x64-$version.zip" | Out-File -FilePath "emtypyie-cli-native-windows-x64-$version.zip.sha256" -Encoding ascii
+        working-directory: root4c
+
+      - name: Upload C native ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-build
+          path: root4c/emtypyie-cli-native-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
+          if-no-files-found: error
+
+  create-release:
+    needs: [build-node, build-c]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: node-build
+          path: node-artifacts
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: c-build
+          path: c-artifacts
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -55,12 +122,11 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            root4node/dist/emtypyie.exe
-            root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip
-            root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip.sha256
+            node-artifacts/*
+            c-artifacts/*
 
   publish-npm:
-    needs: build
+    needs: build-node
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,7 +143,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-winget:
-    needs: build
+    needs: build-c
     runs-on: windows-latest
     steps:
       - name: Extract version
@@ -94,5 +160,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.WINGETCREATE_TOKEN }}
         run: |
           $version = "${{ steps.version.outputs.VERSION }}"
-          $installerUrl = "https://github.com/myrachane/emtypyie-cli/releases/download/v$version/emtypyie-cli-windows-x64-$version.zip"
+          $installerUrl = "https://github.com/myrachane/emtypyie-cli/releases/download/v$version/emtypyie-cli-native-windows-x64-$version.zip"
           .\wingetcreate.exe update myrachane.emtypyie-cli --version $version --urls $installerUrl --submit --token $env:GITHUB_TOKEN

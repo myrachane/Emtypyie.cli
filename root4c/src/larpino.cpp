@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cstdint>
+#include <ctime>
 
 #define LARPINO_MAX_CTX 2048
 #define LARPINO_TOP_K 40
@@ -50,9 +51,9 @@ struct larpino_model {
     std::vector<float> scores;
     std::vector<std::pair<int,int>> merges;
     std::unordered_map<std::string,int> tmap;
-    float *k_cache=nullptr, *v_cache=nullptr, *buf=nullptr;
-    int cache_len=0;
-    ~larpino_model(){ free(k_cache); free(v_cache); free(buf); }
+    float *k_cache=nullptr, *v_cache=nullptr, *buf=nullptr, *tmp=nullptr;
+    int cache_len=0, kv_dim=0;
+    ~larpino_model(){ free(k_cache); free(v_cache); free(buf); free(tmp); }
 };
 
 static size_t blk_size(uint32_t t, size_t &elems) {
@@ -70,14 +71,13 @@ static void softmax(float *a, int n){
     float sum=0; for(int i=0;i<n;i++){a[i]=expf(a[i]-mx);sum+=a[i];} for(int i=0;i<n;i++)a[i]/=sum;
 }
 static float silu(float x){ return x/(1.0f+expf(-x)); }
-static void rope(float *q, float *k, int dim, int nh, int pos){
+static void rope(float *x, int dim, int nh, int pos){
     int hd=dim/nh;
     for(int h=0;h<nh;h++){
-        float *qh=q+h*hd, *kh=k+h*hd;
+        float *xh=x+h*hd;
         for(int i=0;i<hd;i+=2){
             float th=(float)pos*powf(10000.0f,-2.0f*i/hd), s=sinf(th), c=cosf(th);
-            float q0=qh[i],q1=qh[i+1]; qh[i]=q0*c-q1*s; qh[i+1]=q0*s+q1*c;
-            float k0=kh[i],k1=kh[i+1]; kh[i]=k0*c-k1*s; kh[i+1]=k0*s+k1*c;
+            float x0=xh[i],x1=xh[i+1]; xh[i]=x0*c-x1*s; xh[i+1]=x0*s+x1*c;
         }
     }
 }
@@ -105,14 +105,19 @@ static void get_row(const larpino_model *m, const char *name, int row, float *ou
 }
 
 static int forward(larpino_model *m, int *tokens, int n_tokens) {
-    int D=m->dim, NH=m->n_heads, NK=m->n_kv_heads, HD=D/NH, NL=m->n_layers, MX=LARPINO_MAX_CTX;
+    int D=m->dim, NH=m->n_heads, NK=m->n_kv_heads, HD=D/NH, NL=m->n_layers, MX=LARPINO_MAX_CTX, KVD=m->kv_dim;
+    if(KVD==0) KVD=NK*HD;
     std::vector<float> h(D), ao(D), q(D), k(D), v(D), sc(NH*MX), lg(m->vocab_size);
-    auto &te=m->tensors["token_embd.weight"];
-    auto &ow=m->tensors["output.weight"];
+    auto *tmp=m->tmp;
 
     for(int t=0;t<n_tokens;t++){
         int pos=m->cache_len+t, tok=tokens[t];
-        if(te.f32) memcpy(h.data(),te.f32+tok*D,D*4); else get_row(m,"token_embd.weight",tok,h.data());
+        if(pos>=MX) break;
+        if(tok>=0&&tok<m->vocab_size){
+            auto &te=m->tensors["token_embd.weight"];
+            if(te.f32) memcpy(h.data(),te.f32+tok*D,D*4);
+            else { get_row(m,"token_embd.weight",tok,m->tmp); memcpy(h.data(),m->tmp,D*4); }
+        } else { memset(h.data(),0,D*4); }
 
         for(int l=0;l<NL;l++){
             char b[128]; size_t lo=(size_t)l*2*MX*D;
@@ -120,11 +125,13 @@ static int forward(larpino_model *m, int *tokens, int n_tokens) {
             rms_norm(h.data(),h.data(),D,m->norm_eps); for(int i=0;i<D;i++)h[i]*=m->buf[i];
 
             snprintf(b,128,"blk.%d.attn_q.weight",l); matmul_q4(q.data(),h.data(),m->tensors[b].q4,1,D,D);
-            snprintf(b,128,"blk.%d.attn_k.weight",l); matmul_q4(k.data(),h.data(),m->tensors[b].q4,1,D,D);
-            snprintf(b,128,"blk.%d.attn_v.weight",l); matmul_q4(v.data(),h.data(),m->tensors[b].q4,1,D,D);
-            rope(q.data(),k.data(),D,NH,pos);
+            snprintf(b,128,"blk.%d.attn_k.weight",l); matmul_q4(tmp,h.data(),m->tensors[b].q4,1,KVD,D);
+            snprintf(b,128,"blk.%d.attn_v.weight",l); matmul_q4(v.data(),h.data(),m->tensors[b].q4,1,KVD,D);
+            rope(q.data(),D,NH,pos);
+            rope(tmp,KVD,NK,pos);
 
-            for(int i=0;i<D;i++){ m->k_cache[lo+pos*D+i]=k[i]; m->v_cache[lo+MX*D+pos*D+i]=v[i]; }
+            memcpy(m->k_cache+lo+pos*D,tmp,(size_t)KVD*4);
+            memcpy(m->v_cache+lo+MX*D+pos*D,v.data(),(size_t)KVD*4);
             memset(ao.data(),0,D*4);
 
             for(int hh=0;hh<NH;hh++){
@@ -140,7 +147,7 @@ static int forward(larpino_model *m, int *tokens, int n_tokens) {
                 }
             }
             snprintf(b,128,"blk.%d.attn_out.weight",l);
-            { std::vector<float> tmp(D); matmul_q4(tmp.data(),ao.data(),m->tensors[b].q4,1,D,D); for(int i=0;i<D;i++)h[i]+=tmp[i]; }
+            { std::vector<float> tmp2(D); matmul_q4(tmp2.data(),ao.data(),m->tensors[b].q4,1,D,D); for(int i=0;i<D;i++)h[i]+=tmp2[i]; }
 
             snprintf(b,128,"blk.%d.ffn_norm.weight",l); get_row(m,b,0,m->buf);
             rms_norm(h.data(),h.data(),D,m->norm_eps); for(int i=0;i<D;i++)h[i]*=m->buf[i];
@@ -163,6 +170,7 @@ static int forward(larpino_model *m, int *tokens, int n_tokens) {
         get_row(m,"output_norm.weight",0,m->buf);
         rms_norm(h.data(),h.data(),D,m->norm_eps); for(int i=0;i<D;i++)h[i]*=m->buf[i];
 
+        auto &ow=m->tensors["output.weight"];
         if(ow.f32){ float *w=ow.f32; for(int i=0;i<m->vocab_size;i++)lg[i]=dot(h.data(),w+i*D,D); }
         else matmul_q4(lg.data(),h.data(),ow.q4,1,m->vocab_size,D);
     }
@@ -183,12 +191,15 @@ static int forward(larpino_model *m, int *tokens, int n_tokens) {
 }
 
 static std::vector<int> tokenize(larpino_model *m, const char *text) {
-    std::string s=" "+std::string(text);
     std::vector<int> ids;
-    for(char c:s){
-        std::string ch(1,c);
+    ids.push_back(m->tmap.count(" ") ? m->tmap[" "] : 29871);
+    const char *p=text;
+    while(*p){
+        unsigned char uc=(unsigned char)*p;
+        std::string ch(1,(char)uc);
         auto it=m->tmap.find(ch);
-        ids.push_back(it!=m->tmap.end()?it->second:((unsigned char)c+3));
+        ids.push_back(it!=m->tmap.end()?it->second:(int)uc);
+        p++;
     }
     bool merged=true;
     while(merged){
@@ -275,8 +286,13 @@ larpino_model* larpino_load(const char *path) {
         Tensor t; t.name=ti.name; t.type=ti.ty; t.n_dims=ti.nd; memcpy(t.ne,ti.dm,sizeof(ti.dm));
         size_t be; size_t bs=blk_size(ti.ty,be); t.n_elems=1; for(uint32_t j=0;j<4;j++)t.n_elems*=ti.dm[j];
         size_t nb=(t.n_elems+be-1)/be, ds=nb*bs;
-        if(ti.ty==GGML_TYPE_F32){ t.f32=new float[t.n_elems]; fseek(f,(long)ti.off,SEEK_SET); r8(t.f32,ds); }
-        else if(ti.ty==GGML_TYPE_Q4_0){ t.q4=new block_q4_0[nb]; fseek(f,(long)ti.off,SEEK_SET); r8(t.q4,ds); }
+        fseek(f,(long)ti.off,SEEK_SET);
+        if(ti.ty==GGML_TYPE_F32){ t.f32=new float[t.n_elems]; r8(t.f32,ds); }
+        else if(ti.ty==GGML_TYPE_Q4_0){ t.q4=new block_q4_0[nb]; r8(t.q4,ds); }
+        else if(ti.ty==GGML_TYPE_F16){
+            t.f32=new float[t.n_elems]; std::vector<uint16_t> f16(t.n_elems);
+            r8(f16.data(),ds); for(size_t i=0;i<t.n_elems;i++) t.f32[i]=fp16_to_fp32(f16[i]);
+        }
         else continue;
         m->tensors[ti.name]=std::move(t);
     }
@@ -295,9 +311,15 @@ larpino_model* larpino_load(const char *path) {
         }
     }
 
+    /* kv_dim from attn_k.weight shape */
+    auto ki=m->tensors.find("blk.0.attn_k.weight");
+    if(ki!=m->tensors.end()) m->kv_dim=(int)ki->second.ne[0];
+
     m->k_cache=(float*)calloc((size_t)m->n_layers*2*LARPINO_MAX_CTX*m->dim,4);
     m->v_cache=(float*)calloc((size_t)m->n_layers*2*LARPINO_MAX_CTX*m->dim,4);
     m->buf=(float*)calloc(m->dim,4);
+    int kvd=m->kv_dim?m->kv_dim:m->dim;
+    m->tmp=(float*)calloc(kvd,4);
     m->loaded=true;
     return m;
 }
@@ -308,6 +330,7 @@ int larpino_is_loaded(const larpino_model *m){ return m&&m->loaded; }
 int larpino_chat(larpino_model *m, const char *prompt, larpino_callback cb, void *user){
     if(!m||!m->loaded) return -1;
     m->stop=false; m->cache_len=0;
+    srand((unsigned)time(nullptr));
 
     std::vector<int> toks=tokenize(m,prompt);
     if(toks.empty()) return -1;

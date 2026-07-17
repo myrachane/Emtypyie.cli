@@ -8,6 +8,7 @@ root4node/node_modules/
 root4node/dist/
 dist/
 dev/
-mainsite/
 choco/*.nupkg
 root4c/build/
+*.zip
+*.zip.sha256
