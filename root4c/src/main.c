@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     theme_init(theme_name);
 
     if (argc == 1) {
-        shell_run();
+        print_usage();
         return 0;
     }
 
