@@ -729,9 +729,9 @@ footer { border-top: 1px solid var(--rule); background: var(--bg2); transition: 
       <button class="install-copy" id="install-copy-btn" type="button">Copy</button>
     </div>
     <p class="install-deps-note">The winget &amp; choco packages ship the self-contained C native build. npm installs the Node.js version (requires Node 18+). After installation, run <code style="font-family:var(--mono);font-size:0.72rem;background:var(--bg2);border:1px solid var(--rule);color:var(--accent);padding:0.08rem 0.3rem;">emtypyie</code> in your terminal to start.</p>
-    <div class="download-row">
-      <a class="download-btn" href="https://github.com/myrachane/emtypyie-cli/releases/download/v2.5.0/emtypyie-cli-native-windows-x64-2.5.0.zip">&#9660; C Native EXE <span class="size">60 KB</span></a>
-      <a class="download-btn" href="https://github.com/myrachane/emtypyie-cli/releases/download/v2.5.0/emtypyie-cli-windows-x64-2.5.0.zip">&#9660; Node.js EXE <span class="size">14 MB</span></a>
+    <div class="download-row" id="download-row">
+      <a class="download-btn" id="dl-native" href="#">&#9660; C Native EXE <span class="size">loading</span></a>
+      <a class="download-btn" id="dl-node" href="#">&#9660; Node.js EXE <span class="size">loading</span></a>
     </div>
     <p class="install-gh-link" style="margin-top:0.8rem;"><a href="https://github.com/myrachane/emtypyie-cli" target="_blank" rel="noopener">Report issues on GitHub</a></p>
   </div>
@@ -1199,7 +1199,20 @@ const versionEl = document.getElementById('cli-version');
 fetch('https://registry.npmjs.org/emtypyie-cli/latest')
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
   .then(data => {
-    versionEl.textContent = 'v' + data.version;
+    const v = data.version;
+    versionEl.textContent = 'v' + v;
+    const nativeBtn = document.getElementById('dl-native');
+    const nodeBtn = document.getElementById('dl-node');
+    const nativeSize = data._nativeSize || '60 KB';
+    const nodeSize = data._nodeSize || '14 MB';
+    if (nativeBtn) {
+      nativeBtn.href = `https://github.com/myrachane/emtypyie-cli/releases/download/v${v}/emtypyie-cli-native-windows-x64-${v}.zip`;
+      nativeBtn.querySelector('.size').textContent = nativeSize;
+    }
+    if (nodeBtn) {
+      nodeBtn.href = `https://github.com/myrachane/emtypyie-cli/releases/download/v${v}/emtypyie-cli-windows-x64-${v}.zip`;
+      nodeBtn.querySelector('.size').textContent = nodeSize;
+    }
   })
   .catch(() => {
     versionEl.textContent = 'unknown';
