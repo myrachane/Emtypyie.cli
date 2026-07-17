@@ -223,6 +223,7 @@ void project_get(const char *name) {
         printf("  %s %s\n", retro_dim("Repo:"),   retro_dim(m.repo));
 
     char *dev_dir = get_dev_dir(name);
+    int installed = 0;
 
     if (strlen(m.download) > 0) {
         char dest[1024];
@@ -231,25 +232,35 @@ void project_get(const char *name) {
 
         if (download_file(m.download, dest)) {
             printf("  %s\n", retro("Extracting..."));
+            int extract_ok = 0;
 #ifdef _WIN32
             char extract_cmd[2048];
             snprintf(extract_cmd, sizeof(extract_cmd),
                 "powershell -Command \"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"", dest, dev_dir);
-            exec_cmd_silent(extract_cmd);
+            if (exec_cmd_silent(extract_cmd)) extract_ok = 1;
 #else
             char extract_cmd[2048];
             snprintf(extract_cmd, sizeof(extract_cmd), "unzip -o '%s' -d '%s'", dest, dev_dir);
-            system(extract_cmd);
+            if (system(extract_cmd) == 0) extract_ok = 1;
 #endif
             remove(dest);
 
-            char meta_file[1024];
-            snprintf(meta_file, sizeof(meta_file), "%s%c.emtypyie.json", dev_dir, PATH_SEP);
-            write_file(meta_file, meta_body);
+            if (extract_ok) {
+                char meta_file[1024];
+                snprintf(meta_file, sizeof(meta_file), "%s%c.emtypyie.json", dev_dir, PATH_SEP);
+                write_file(meta_file, meta_body);
+                if (dir_exists(dev_dir)) {
+                    installed = 1;
+                }
+            }
+        }
 
+        if (installed) {
             printf("  %s %s %s\n", retro_accent(name), retro_dim("installed to"), retro_dim(dev_dir));
         } else {
-            printf("  %s %s\n", retro_err("Failed to download:"), retro_dim(name));
+            /* rollback: clean up partial state */
+            if (dir_exists(dev_dir)) dir_remove_recursive(dev_dir);
+            printf("  %s %s\n", retro_err("Failed to install:"), retro_dim(name));
         }
     } else {
         /* no download URL — maybe a meta-only project */

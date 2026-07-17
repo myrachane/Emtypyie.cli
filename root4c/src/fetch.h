@@ -7,6 +7,7 @@ typedef struct {
     int status_code;
     char *body;
     size_t body_size;
+    char error[256];       /* populated on failure with human-readable error */
 } FetchResult;
 
 FetchResult* fetch_get(const char *url);

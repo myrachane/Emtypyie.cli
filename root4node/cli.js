@@ -102,7 +102,11 @@ async function handleCommand(cmd, arg, rl) {
       break;
 
     case 'wrap':
-      await publish.doWrap(rl, arg);
+      try {
+        await publish.doWrap(rl, arg);
+      } catch (e) {
+        console.log(t.retroErr(`  Wrap failed: ${e.message}`));
+      }
       break;
 
     case 'setenv':
@@ -211,16 +215,32 @@ function generateLicense() {
   return result;
 }
 
+const WITCHES_ART = [
+  '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢢⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⠀⠀⠀⠀⣀⣤⡀⠀⠀⠍⠭⣔⣄⠀⠀⠀⠀⠀⢈⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⢰⢂⣀⣀⣤⣀⣹⣷⣤⣀⣀⠀⢉⣿⣶⣶⣶⣶⣿⣿⣿⠷⠆⠀⠀⠀⠀⣀⣄⠀',
+  '⠀⠈⠉⠹⠟⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⠋⠀⠀⠀⡤⠀⠀⣿⣏⠀',
+  '⠀⠀⠀⠐⠹⢟⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⣽⣿⣿⠿⣆⠀⠀⠀⠀⢸⢀⣿⣿⠀',
+  '⠀⠀⠀⠀⠀⠠⢴⣿⠟⢛⣿⣿⣟⣩⣴⣾⣿⡉⠹⢦⡈⠳⢤⡀⠀⠈⢼⣿⣿⡄',
+  '⠀⢀⣀⣀⣀⡀⠀⠀⠀⠀⠋⠀⣿⣿⣿⣿⣿⣿⣦⣀⡉⠶⡤⠈⠛⠂⠉⠁⠀⠀',
+  '⠀⠀⢺⣿⣿⣿⡿⠿⠿⣟⣛⣭⣽⣿⣿⣿⣿⣿⣿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⠀⠀⠀⢉⠕⠺⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⠀⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⠀⠀⠀⠀⠀⠈⠉⠁⠛⢻⣿⠟⢑⡾⠁⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+  '⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠁⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ',
+];
+
 function showAbout() {
   console.log();
   const pkg = require('./package.json');
-  console.log(t.retro(BANNER));
   console.log(t.retro(`  EMTYPYIE CLI v${pkg.version}`));
-  console.log(t.retroDim(`  Released ${getReleaseDate()}`));
+  console.log(t.retroDim('  "Wandering Witches"'));
   console.log();
+  for (const line of WITCHES_ART) console.log(t.retroAccent(line));
+  console.log();
+  console.log(t.retroDim('  Release: ') + t.retroAccent('Wandering Witches'));
   console.log(t.retroDim('  DESIGNED AND ENGINEERED BY  EMTYPYIE'));
   console.log(t.retroDim(`  Copyright \u00a9 ${new Date().getFullYear()} EMTYPYIE. All rights reserved.`));
-  console.log(t.retroDim(`  License ${generateLicense()}`));
   console.log();
 }
 
@@ -521,7 +541,11 @@ function interactive() {
       return;
     }
 
-    await handleCommand(cmd, arg, rl);
+    try {
+      await handleCommand(cmd, arg, rl);
+    } catch (e) {
+      console.log(t.retroErr(`  Error: ${e.message}`));
+    }
     rl.prompt();
   });
 
@@ -541,7 +565,11 @@ async function direct(args) {
     return;
   }
 
-  await handleCommand(cmd, arg, null);
+  try {
+    await handleCommand(cmd, arg, null);
+  } catch (e) {
+    console.log(t.retroErr(`  Error: ${e.message}`));
+  }
 }
 
 const args = process.argv.slice(2);

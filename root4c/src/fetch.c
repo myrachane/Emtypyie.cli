@@ -48,9 +48,24 @@ static size_t write_cb(void *ptr, size_t size, size_t nmemb, struct WriteBuf *bu
 }
 
 #ifdef _WIN32
+static void set_winhttp_error(FetchResult *res, const char *context) {
+    DWORD err = GetLastError();
+    char *msg = NULL;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char*)&msg, 0, NULL);
+    if (msg) {
+        char *nl = strchr(msg, '\r'); if (nl) *nl = '\0';
+        snprintf(res->error, sizeof(res->error), "%s: %s", context, msg);
+        LocalFree(msg);
+    } else {
+        snprintf(res->error, sizeof(res->error), "%s: error %lu", context, err);
+    }
+}
+
 static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
     FetchResult *res = calloc(1, sizeof(FetchResult));
     res->status_code = 0;
+    res->error[0] = '\0';
 
     URL_COMPONENTS uc = { sizeof(uc) };
     wchar_t host[256], path[2048], scheme[16];
@@ -62,15 +77,16 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
     mbstowcs(wurl, url, 4096);
 
     if (!WinHttpCrackUrl(wurl, 0, 0, &uc)) {
+        set_winhttp_error(res, "bad URL");
         return res;
     }
 
     BOOL use_ssl = (wcscmp(scheme, L"https") == 0);
     DWORD port = uc.nPort ? uc.nPort : (use_ssl ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT);
 
-    HINTERNET hSession = WinHttpOpen(L"emtypyie-cli/2.5.0",
+    HINTERNET hSession = WinHttpOpen(L"emtypyie-cli/2.5.1",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-    if (!hSession) return res;
+    if (!hSession) { set_winhttp_error(res, "WinHttpOpen"); return res; }
 
     if (timeout_sec > 0) {
         int ms = timeout_sec * 1000;
@@ -78,42 +94,50 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
     }
 
     HINTERNET hConnect = WinHttpConnect(hSession, host, port, 0);
-    if (!hConnect) { WinHttpCloseHandle(hSession); return res; }
+    if (!hConnect) { set_winhttp_error(res, "WinHttpConnect"); WinHttpCloseHandle(hSession); return res; }
 
     HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
         WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
         use_ssl ? WINHTTP_FLAG_SECURE : 0);
-    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return res; }
+    if (!hRequest) { set_winhttp_error(res, "WinHttpOpenRequest"); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return res; }
 
     if (timeout_sec > 0) {
         int ms = timeout_sec * 1000;
         WinHttpSetTimeouts(hRequest, -1, -1, ms, ms);
     }
 
-    if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-        WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
-        WinHttpReceiveResponse(hRequest, NULL)) {
-
-        DWORD status = 0, status_size = sizeof(status);
-        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-            NULL, &status, &status_size, NULL);
-        res->status_code = (int)status;
-
-        struct WriteBuf buf = {0};
-        buf.cap = 8192;
-        buf.data = malloc(buf.cap);
-        buf.data[0] = '\0';
-
-        char tmp[8192];
-        DWORD bytes_read;
-        while (WinHttpReadData(hRequest, tmp, sizeof(tmp) - 1, &bytes_read) && bytes_read > 0) {
-            tmp[bytes_read] = '\0';
-            write_cb(tmp, 1, bytes_read, &buf);
-        }
-
-        res->body = buf.data;
-        res->body_size = buf.len;
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+        WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        set_winhttp_error(res, "WinHttpSendRequest");
+        WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+        return res;
     }
+
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        set_winhttp_error(res, "WinHttpReceiveResponse");
+        WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+        return res;
+    }
+
+    DWORD status = 0, status_size = sizeof(status);
+    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+        NULL, &status, &status_size, NULL);
+    res->status_code = (int)status;
+
+    struct WriteBuf buf = {0};
+    buf.cap = 8192;
+    buf.data = malloc(buf.cap);
+    buf.data[0] = '\0';
+
+    char tmp[8192];
+    DWORD bytes_read;
+    while (WinHttpReadData(hRequest, tmp, sizeof(tmp) - 1, &bytes_read) && bytes_read > 0) {
+        tmp[bytes_read] = '\0';
+        write_cb(tmp, 1, bytes_read, &buf);
+    }
+
+    res->body = buf.data;
+    res->body_size = buf.len;
 
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
@@ -124,9 +148,13 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
 static FetchResult* fetch_curl(const char *url, int timeout_sec) {
     FetchResult *res = calloc(1, sizeof(FetchResult));
     res->status_code = 0;
+    res->error[0] = '\0';
 
     CURL *curl = curl_easy_init();
-    if (!curl) return res;
+    if (!curl) {
+        snprintf(res->error, sizeof(res->error), "curl_easy_init failed");
+        return res;
+    }
 
     struct WriteBuf buf = {0};
     buf.cap = 8192;
@@ -137,7 +165,7 @@ static FetchResult* fetch_curl(const char *url, int timeout_sec) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "emtypyie-cli/2.5.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "emtypyie-cli/2.5.1");
     if (timeout_sec > 0) curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long)timeout_sec);
 
     CURLcode rc = curl_easy_perform(curl);
@@ -146,6 +174,7 @@ static FetchResult* fetch_curl(const char *url, int timeout_sec) {
         res->body = buf.data;
         res->body_size = buf.len;
     } else {
+        snprintf(res->error, sizeof(res->error), "curl: %s", curl_easy_strerror(rc));
         free(buf.data);
     }
 
@@ -159,11 +188,26 @@ FetchResult* fetch_get(const char *url) {
 }
 
 FetchResult* fetch_get_with_timeout(const char *url, int timeout_sec) {
+    FetchResult *res = NULL;
+
+    for (int attempt = 1; attempt <= 3; attempt++) {
+        if (res) fetch_free(res);
+
 #ifdef _WIN32
-    return fetch_winhttp(url, timeout_sec);
+        res = fetch_winhttp(url, timeout_sec);
 #else
-    return fetch_curl(url, timeout_sec);
+        res = fetch_curl(url, timeout_sec);
 #endif
+        if (!res) continue;
+
+        if (res->status_code >= 200 && res->status_code < 500) {
+            break;
+        }
+
+        if (attempt < 3) Sleep(1000);
+    }
+
+    return res;
 }
 
 void fetch_free(FetchResult *res) {

@@ -12,7 +12,7 @@
 $ErrorActionPreference = 'Stop'
 
 $packageName = 'emtypyie-cli'
-$url = 'https://github.com/myrachane/emtypyie-cli/releases/download/v2.5.0/emtypyie-cli-native-windows-x64-2.5.0.zip'
+$url = 'https://github.com/myrachane/emtypyie-cli/releases/download/v2.5.1/emtypyie-cli-native-windows-x64-2.5.1.zip'
 $checksum = '9548F80E95DAB147EF5734938F5CCC2ABD9762AD9B4C84A9A4E7CC3246906424'
 $checksumType = 'sha256'
 

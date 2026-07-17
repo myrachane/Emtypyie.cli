@@ -32,7 +32,7 @@ bool download_file(const char *url, const char *dest_path) {
     char cmd[4096];
     snprintf(cmd, sizeof(cmd),
         "powershell -Command \"$wc = New-Object System.Net.WebClient; "
-        "$wc.Headers.Add('User-Agent', 'emtypyie-cli/2.5.0'); "
+        "$wc.Headers.Add('User-Agent', 'emtypyie-cli/2.5.1'); "
         "$wc.DownloadFile('%s', '%s')\"",
         url, dest_path);
     if (!exec_cmd_silent(cmd)) {

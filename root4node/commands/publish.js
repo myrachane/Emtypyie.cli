@@ -24,11 +24,19 @@ const https = require('https');
 const { readEnv } = require('./auth');
 
 function run(cmd, cwd) {
-  return execSync(cmd, { cwd, stdio: 'inherit', encoding: 'utf8', timeout: 120000 });
+  try {
+    return execSync(cmd, { cwd, stdio: 'inherit', encoding: 'utf8', timeout: 120000 });
+  } catch (e) {
+    throw new Error(`Command failed: ${cmd.slice(0, 80)} — ${e.message}`);
+  }
 }
 
 function runCapture(cmd, cwd) {
-  return execSync(cmd, { cwd, encoding: 'utf8', timeout: 30000 }).toString().trim();
+  try {
+    return execSync(cmd, { cwd, encoding: 'utf8', timeout: 30000 }).toString().trim();
+  } catch (e) {
+    throw new Error(`Command failed: ${cmd.slice(0, 80)} — ${e.message}`);
+  }
 }
 
 function ghRequest(method, endpoint, token, body) {
