@@ -21,6 +21,7 @@ static void print_usage(void) {
     printf("  /theme  <name>    Change theme\n");
     printf("  /docs   <project> Open documentation\n");
     printf("  /bf               System info (bakafetch)\n");
+    printf("  /larpino <cmd>    LLM chat (enable|disable|status)\n");
     printf("  /clear            Clear screen\n");
     printf("  /shell            Interactive mode\n");
     printf("\n");
@@ -115,6 +116,9 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmd, "/bf") == 0 || strcmp(cmd, "/bakafetch") == 0) {
         extern void bakafetch_show(void);
         bakafetch_show();
+    }
+    else if (strcmp(cmd, "/larpino") == 0) {
+        printf("  %s\n", retro_dim("Use /larpino from the interactive shell."));
     }
     else if (strcmp(cmd, "/clear") == 0) {
         printf("\033[2J\033[H");

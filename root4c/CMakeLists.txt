@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.15)
-project(emtypyie-cli-c VERSION 2.2.0 LANGUAGES C)
+project(emtypyie-cli-c VERSION 2.2.0 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -Wno-missing-field-initializers")
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
 
 add_executable(emtypyie
@@ -18,6 +23,7 @@ add_executable(emtypyie
     src/bakafetch.c
     src/runtime.c
     src/auth.c
+    src/larpino.cpp
     lib/cJSON.c
 )
 

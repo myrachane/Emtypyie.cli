@@ -17,16 +17,27 @@
 #include "project.h"
 #include "bakafetch.h"
 #include "runtime.h"
+#include "download.h"
 #include "auth.h"
+#include "larpino.h"
 
 #define MAX_HISTORY 100
+
+static larpino_model *g_larpino = NULL;
+static int g_larpino_chat = 0;
+
+static void larpino_print_token(const char *tok, void *user) {
+    (void)user;
+    printf("%s", tok);
+    fflush(stdout);
+}
 #define MAX_LINE 4096
 #define MAX_COMMANDS 64
 
 static const char* COMMANDS[] = {
     "help", "about", "wiki", "setenv", "theme", "info", "get", "flash", "rm",
     "issue", "bakafetch", "bf", "wrap", "clear", "update", "list", "docs",
-    "changelog", "exit", "quit", NULL
+    "changelog", "larpino", "exit", "quit", NULL
 };
 
 static char history[MAX_HISTORY][MAX_LINE];
@@ -81,6 +92,8 @@ static void handle_command(const char *input) {
         printf("  %s  %s\n", retro("/changelog"), retro_dim("        what's new"));
         printf("  %s  %s\n", retro("/about"), retro_dim("            about emtypyie"));
         printf("  %s  %s\n", retro("/wiki"), retro_dim("             open wiki.emtypyie.in"));
+        printf("  %s  %s\n", retro("/larpino <cmd>"), retro_dim("     enable|disable|status"));
+        printf("  %s  %s\n", retro("/get larpino@1b"), retro_dim("    download 1B LLM model"));
         printf("  %s  %s\n", retro("/help"), retro_dim("            this screen"));
         printf("  %s  %s\n", retro("/exit"), retro_dim("            quit"));
         printf("\n");
@@ -152,7 +165,32 @@ static void handle_command(const char *input) {
         if (strcmp(arg, "gcc") == 0 || strcmp(arg, "g++") == 0) {
             runtime_install_compiler(arg);
         } else {
-            project_get(arg);
+            /* check for larpino@<variant> syntax */
+            const char *at = strchr(arg, '@');
+            if (at && strncmp(arg, "larpino", 7) == 0) {
+                char variant[64] = {0};
+                strncpy(variant, at + 1, sizeof(variant) - 1);
+                char url[512];
+                snprintf(url, sizeof(url), "https://cdn.emtypyie.in/dev/larpino/%s/model.q4_0.gguf", variant);
+                char *dir = get_dev_dir("larpino");
+                char dest[1024];
+                snprintf(dest, sizeof(dest), "%s\\%s\\model.q4_0.gguf", dir, variant);
+                printf("  %s %s\n", retro_dim("Downloading larpino"), retro_accent(variant));
+                if (download_file(url, dest)) {
+                    printf("  %s\n", retro("Loading model..."));
+                    if (g_larpino) larpino_free(g_larpino);
+                    g_larpino = larpino_load(dest);
+                    if (g_larpino && larpino_is_loaded(g_larpino)) {
+                        printf("  %s\n", retro("larpino ready. Use /larpino enable to chat."));
+                    } else {
+                        printf("  %s\n", retro_err("Failed to load model."));
+                    }
+                } else {
+                    printf("  %s %s\n", retro_err("Download failed:"), retro_dim(variant));
+                }
+            } else {
+                project_get(arg);
+            }
         }
         return;
     }
@@ -190,6 +228,34 @@ static void handle_command(const char *input) {
             return;
         }
         project_docs(arg);
+        return;
+    }
+
+    if (strcmp(cmd, "larpino") == 0) {
+        if (strcmp(arg, "enable") == 0) {
+            if (!g_larpino || !larpino_is_loaded(g_larpino)) {
+                printf("  %s\n", retro_err("No model loaded. Use /get larpino@1b first."));
+                return;
+            }
+            g_larpino_chat = 1;
+            printf("  %s\n", retro("larpino chat mode enabled. Type anything to chat."));
+            printf("  %s\n", retro_dim("Type /larpino disable to exit chat mode."));
+            return;
+        }
+        if (strcmp(arg, "disable") == 0) {
+            g_larpino_chat = 0;
+            if (g_larpino) larpino_free(g_larpino);
+            g_larpino = NULL;
+            printf("  %s\n", retro("larpino disabled."));
+            return;
+        }
+        if (strcmp(arg, "status") == 0) {
+            char buf[256];
+            larpino_status(g_larpino, buf, sizeof(buf));
+            printf("  %s  %s\n", retro("larpino:"), retro_dim(buf));
+            return;
+        }
+        printf("  %s\n", retro_dim("Usage: /larpino enable | disable | status"));
         return;
     }
 
@@ -295,12 +361,20 @@ void shell_run(void) {
             printf("\n");
             buf[pos] = '\0';
             if (pos > 0) {
-                add_history(buf);
-                handle_command(buf);
+                if (g_larpino_chat && buf[0] != '/') {
+                    printf("  %s ", retro("larpino :"));
+                    fflush(stdout);
+                    larpino_chat(g_larpino, buf, larpino_print_token, NULL);
+                    printf("\n");
+                } else {
+                    add_history(buf);
+                    handle_command(buf);
+                }
             }
             pos = 0;
             tab_count = 0;
-            printf(" %s", retro(">> "));
+            printf(" %s%s", g_larpino_chat ? "" : retro(">> "),
+                           g_larpino_chat ? retro_dim("user >> ") : "");
             fflush(stdout);
         } else if (key.wVirtualKeyCode == VK_BACK) {
             if (pos > 0) {
