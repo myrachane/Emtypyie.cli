@@ -373,7 +373,12 @@ async function doIssue(arg) {
 }
 
 function launch(path) {
-  spawn(path, [], { detached: true, stdio: 'ignore' }).unref();
+  const isBat = /\.bat$|\.cmd$/i.test(path);
+  if (isBat) {
+    spawn(process.env.COMSPEC || 'cmd.exe', ['/c', path], { detached: true, stdio: 'ignore' }).unref();
+  } else {
+    spawn(path, [], { detached: true, stdio: 'ignore' }).unref();
+  }
 }
 
 async function runProject(name) {

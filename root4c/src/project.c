@@ -330,6 +330,10 @@ bool project_run(const char *name) {
 
     cJSON *run_item = cJSON_GetObjectItem(json, "run");
     const char *run_val = cJSON_GetStringValue(run_item);
+    if (!run_val || strlen(run_val) == 0) {
+        run_item = cJSON_GetObjectItem(json, "filename");
+        run_val = cJSON_GetStringValue(run_item);
+    }
 
     if (!run_val || strlen(run_val) == 0) {
         printf("  %s %s\n", retro_err("Project has no run target:"), retro_dim(name));
@@ -352,6 +356,8 @@ bool project_run(const char *name) {
     const char *ext = strrchr(run_val, '.');
     if (ext && (strcmp(ext, ".py") == 0)) {
         snprintf(spawn_cmd, sizeof(spawn_cmd), "python \"%s\"", run_path);
+    } else if (ext && (strcmp(ext, ".bat") == 0 || strcmp(ext, ".cmd") == 0)) {
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "cmd.exe /c \"%s\"", run_path);
     } else if (ext && (strcmp(ext, ".sh") == 0)) {
         snprintf(spawn_cmd, sizeof(spawn_cmd), "sh \"%s\"", run_path);
     } else {
