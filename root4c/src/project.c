@@ -199,6 +199,25 @@ void project_info(const char *name) {
     printf("\n");
 }
 
+void project_install_deps(const char *dev_dir) {
+    char req_path[1024];
+    snprintf(req_path, sizeof(req_path), "%s%crequirements.txt", dev_dir, PATH_SEP);
+    if (!file_exists(req_path)) return;
+
+    printf("  %s\n", retro_dim("Installing Python dependencies..."));
+    char cmd[2048];
+#ifdef _WIN32
+    snprintf(cmd, sizeof(cmd), "py -3 -m pip install -r \"%s\" -q", req_path);
+#else
+    snprintf(cmd, sizeof(cmd), "python3 -m pip install -r \"%s\" -q", req_path);
+#endif
+    if (system(cmd) == 0) {
+        printf("  %s\n", retro("Dependencies installed."));
+    } else {
+        printf("  %s\n", retro_warn("pip install had issues (see above)."));
+    }
+}
+
 void project_get(const char *name) {
     printf("\n");
 
@@ -257,6 +276,7 @@ void project_get(const char *name) {
         }
 
         if (installed) {
+            project_install_deps(dev_dir);
             printf("  %s %s %s\n", retro_accent(name), retro_dim("installed to"), retro_dim(dev_dir));
         } else {
             /* rollback: clean up partial state */
@@ -352,12 +372,14 @@ bool project_run(const char *name) {
         return false;
     }
 
+    project_install_deps(dev_dir);
+
     char spawn_cmd[2048];
     const char *ext = strrchr(run_val, '.');
     if (ext && (strcmp(ext, ".py") == 0)) {
-        snprintf(spawn_cmd, sizeof(spawn_cmd), "python \"%s\"", run_path);
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "py -3 \"%s\"", run_path);
     } else if (ext && (strcmp(ext, ".bat") == 0 || strcmp(ext, ".cmd") == 0)) {
-        snprintf(spawn_cmd, sizeof(spawn_cmd), "cmd.exe /c \"%s\"", run_path);
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "\"%s\"", run_path);
     } else if (ext && (strcmp(ext, ".sh") == 0)) {
         snprintf(spawn_cmd, sizeof(spawn_cmd), "sh \"%s\"", run_path);
     } else {

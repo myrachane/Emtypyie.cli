@@ -287,6 +287,7 @@ async function doGet(name) {
     return;
   }
   await getCommand.install(lower, proj);
+  installDeps(t.getDevDir(lower));
 }
 
 async function doFlash(name) {
@@ -310,6 +311,7 @@ async function doFlash(name) {
     console.log(t.retroDim('  Removed old files.'));
   }
   await getCommand.install(name.toLowerCase(), proj);
+  installDeps(t.getDevDir(name.toLowerCase()));
 }
 
 async function doRemove(name) {
@@ -372,6 +374,19 @@ async function doIssue(arg) {
   }
 }
 
+function installDeps(dir) {
+  const reqPath = path.join(dir, 'requirements.txt');
+  if (!fs.existsSync(reqPath)) return;
+  console.log(t.retroDim('  Installing Python dependencies...'));
+  try {
+    const launcher = process.platform === 'win32' ? 'py -3' : 'python3';
+    execSync(`${launcher} -m pip install -r "${reqPath}" -q`, { stdio: 'pipe', timeout: 120000 });
+    console.log(t.retro('  Dependencies installed.'));
+  } catch {
+    console.log(t.retroWarn('  pip install had issues (see above).'));
+  }
+}
+
 function launch(path) {
   const isBat = /\.bat$|\.cmd$/i.test(path);
   if (isBat) {
@@ -413,6 +428,8 @@ async function runProject(name) {
     console.log(t.retroErr(`  "${name}" not downloaded yet. Run /get ${name} first.`));
     return;
   }
+  installDeps(t.getDevDir(name));
+
   if (isScript(runTarget)) {
     console.log(t.retro(`  Running ${t.retroAccent(proj.name || name)}...`));
     try { runSync(runPath); } catch (e) {
