@@ -125,6 +125,16 @@ jobs:
             node-artifacts/*
             c-artifacts/*
 
+      - name: Remove auto-generated source archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          REPO="emtypyie-cli"
+          gh release delete-asset "$TAG" "${REPO}-${TAG}.zip" --yes 2>/dev/null || true
+          gh release delete-asset "$TAG" "${REPO}-${TAG}.tar.gz" --yes 2>/dev/null || true
+
   publish-npm:
     needs: build-node
     runs-on: ubuntu-latest
