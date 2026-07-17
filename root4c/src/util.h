@@ -54,4 +54,10 @@ void add_to_user_path(const char *dir);
 /* Platform check — compile-time constant. */
 bool is_windows(void);
 
+/* Spawn a process detached from the CLI (no wait, no console window).
+ * On Windows uses CreateProcess with DETACHED_PROCESS.
+ * On POSIX uses fork() + exec().
+ * Returns true if the process was launched successfully. */
+bool spawn_detached(const char *cmd);
+
 #endif

@@ -234,3 +234,27 @@ bool is_windows(void) {
     return false;
 #endif
 }
+
+bool spawn_detached(const char *cmd) {
+#ifdef _WIN32
+    STARTUPINFO si = { sizeof(si) };
+    PROCESS_INFORMATION pi;
+    char cmdline[4096];
+    snprintf(cmdline, sizeof(cmdline), "cmd.exe /c %s", cmd);
+    if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE,
+        DETACHED_PROCESS | CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return true;
+    }
+    return false;
+#else
+    pid_t pid = fork();
+    if (pid == 0) {
+        setsid();
+        execl("/bin/sh", "sh", "-c", cmd, NULL);
+        _exit(127);
+    }
+    return pid > 0;
+#endif
+}

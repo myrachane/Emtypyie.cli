@@ -316,8 +316,10 @@ static void handle_command(const char *input) {
         return;
     }
 
-    printf("  %s %s\n", retro_err("Unknown command:"), retro_dim(cmd));
-    printf("  %s\n", retro_dim("Type /help for available commands."));
+    if (!project_run(cmd)) {
+        printf("  %s %s\n", retro_err("Unknown command:"), retro_dim(cmd));
+        printf("  %s\n", retro_dim("Type /help for available commands."));
+    }
 }
 
 #ifndef _WIN32

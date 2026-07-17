@@ -3,6 +3,7 @@
 #include "fetch.h"
 #include "download.h"
 #include "util.h"
+#include "cJSON.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -304,4 +305,68 @@ void project_docs(const char *name) {
     snprintf(cmd, sizeof(cmd), "xdg-open %s", url);
 #endif
     system(cmd);
+}
+
+bool project_run(const char *name) {
+    char url[512];
+    snprintf(url, sizeof(url), "%s/%s/metadata.json", API_BASE, name);
+
+    printf("  %s %s\n", retro_dim("Checking project:"), retro_accent(name));
+    FetchResult *res = fetch_get_with_timeout(url, 5);
+    if (!res || res->status_code != 200) {
+        printf("  %s  %s\n", retro_err("Unknown command:"), retro_dim(name));
+        printf("  %s\n", retro_dim("Type /help for available commands."));
+        fetch_free(res);
+        return false;
+    }
+
+    cJSON *json = cJSON_Parse(res->body);
+    fetch_free(res);
+
+    if (!json) {
+        printf("  %s\n", retro_dim("(Could not parse project metadata)"));
+        return false;
+    }
+
+    cJSON *run_item = cJSON_GetObjectItem(json, "run");
+    const char *run_val = cJSON_GetStringValue(run_item);
+
+    if (!run_val || strlen(run_val) == 0) {
+        printf("  %s %s\n", retro_err("Project has no run target:"), retro_dim(name));
+        cJSON_Delete(json);
+        return false;
+    }
+
+    char *dev_dir = get_dev_dir(name);
+    char run_path[1024];
+    snprintf(run_path, sizeof(run_path), "%s%c%s", dev_dir, PATH_SEP, run_val);
+
+    if (!file_exists(run_path)) {
+        printf("  %s %s %s\n", retro_err("Project not installed."), retro_dim("Run /get"), retro_accent(name));
+        free(dev_dir);
+        cJSON_Delete(json);
+        return false;
+    }
+
+    char spawn_cmd[2048];
+    const char *ext = strrchr(run_val, '.');
+    if (ext && (strcmp(ext, ".py") == 0)) {
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "python \"%s\"", run_path);
+    } else if (ext && (strcmp(ext, ".sh") == 0)) {
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "sh \"%s\"", run_path);
+    } else {
+        snprintf(spawn_cmd, sizeof(spawn_cmd), "\"%s\"", run_path);
+    }
+
+    printf("  %s %s\n", retro("Launching"), retro_accent(name));
+    if (!spawn_detached(spawn_cmd)) {
+        printf("  %s\n", retro_err("Failed to launch project."));
+        free(dev_dir);
+        cJSON_Delete(json);
+        return false;
+    }
+
+    free(dev_dir);
+    cJSON_Delete(json);
+    return true;
 }
