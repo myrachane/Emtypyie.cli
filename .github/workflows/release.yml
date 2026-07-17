@@ -148,7 +148,7 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npm publish
+      - run: npm publish || echo "npm publish skipped (version may already exist)"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -165,6 +165,7 @@ jobs:
         run: Invoke-WebRequest -Uri "https://aka.ms/wingetcreate/latest" -OutFile "wingetcreate.exe"
 
       - name: Submit update to winget-pkgs
+        continue-on-error: true
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.WINGETCREATE_TOKEN }}

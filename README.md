@@ -1,4 +1,4 @@
-# EMTYPYIE.CLI v2.2.0
+# EMTYPYIE.CLI v2.5.0
 
 > Run emtypyie projects from your terminal with ease — the future runtime engine.
 
@@ -69,5 +69,7 @@ Each GitHub release ships two Windows executables:
 
 | ZIP | Contents | Source |
 |-----|----------|--------|
-| `emtypyie-cli-windows-x64-<ver>.zip` | `emtypyie.exe` | Node.js (pkg) |
-| `emtypyie-cli-native-windows-x64-<ver>.zip` | `emtypyie.exe` | C native build |
+| ZIP | Contents | Source |
+|-----|----------|--------|
+| `emtypyie-cli-windows-x64-2.5.0.zip` | `emtypyie.exe` | Node.js (pkg) |
+| `emtypyie-cli-native-windows-x64-2.5.0.zip` | `emtypyie.exe` | C native build |

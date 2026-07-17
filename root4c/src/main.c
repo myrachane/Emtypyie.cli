@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     if (cmd[0] != '/') {
         if (strcmp(cmd, "help") == 0) print_usage();
         else if (strcmp(cmd, "about") == 0)
-            printf("EMTYPYIE CLI v2.2.0 (C port)\n");
+            printf("EMTYPYIE CLI v2.5.0 (C port)\n");
         else
             printf("Unrecognized. Use /help\n");
         return 0;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
     if      (strcmp(cmd, "/help") == 0)  print_usage();
     else if (strcmp(cmd, "/about") == 0) {
-        printf("  %s\n", retro_accent("EMTYPYIE CLI v2.2.0 (C port)"));
+        printf("  %s\n", retro_accent("EMTYPYIE CLI v2.5.0 (C port)"));
         printf("  %s\n", retro_dim("Copyright 2026 EMTYPYIE. All rights reserved."));
     }
     else if (strcmp(cmd, "/get") == 0) {

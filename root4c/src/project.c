@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+
 
 #define API_BASE "https://cdn.emtypyie.in/dev"
 #define MAX_LINE 1024

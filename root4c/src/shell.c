@@ -103,7 +103,7 @@ static void handle_command(const char *input) {
     if (strcmp(cmd, "about") == 0) {
         printf("\n");
         printf("%s", retro(BANNER));
-        printf("  %s\n", retro("EMTYPYIE CLI v2.2.0"));
+        printf("  %s\n", retro("EMTYPYIE CLI v2.5.0"));
         printf("  %s\n", retro_dim("Released 2026-07-16"));
         printf("\n");
         printf("  %s\n", retro_dim("DESIGNED AND ENGINEERED BY  EMTYPYIE"));
