@@ -52,11 +52,12 @@ int main(int argc, char *argv[]) {
 
     theme_init(theme_name);
 
+    int skip_anim = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--no-animation") == 0) skip_anim = 1;
+    }
+
     if (argc == 1) {
-        int skip_anim = 0;
-        for (int i = 1; i < argc; i++) {
-            if (strcmp(argv[i], "--no-animation") == 0) skip_anim = 1;
-        }
         if (!skip_anim && !getenv("EMTYPYIE_NO_ANIM")) {
             startup_animation_play();
         }

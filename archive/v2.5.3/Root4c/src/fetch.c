@@ -84,7 +84,7 @@ static FetchResult* fetch_winhttp(const char *url, int timeout_sec) {
     BOOL use_ssl = (wcscmp(scheme, L"https") == 0);
     DWORD port = uc.nPort ? uc.nPort : (use_ssl ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT);
 
-    HINTERNET hSession = WinHttpOpen(L"emtypyie-cli/2.5.1",
+    HINTERNET hSession = WinHttpOpen(L"emtypyie-cli/2.5.3",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
     if (!hSession) { set_winhttp_error(res, "WinHttpOpen"); return res; }
 

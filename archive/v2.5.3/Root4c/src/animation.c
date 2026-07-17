@@ -1,6 +1,6 @@
 #include "animation.h"
 #include "util.h"
-#include "lib/cJSON.h"
+#include "cJSON.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,12 +50,28 @@ static void enable_vt_mode(void) {
 #endif
 }
 
-static char* read_animation_file(void) {
-    char *emty_dir = get_emty_dir();
-    char path[1024];
-    snprintf(path, sizeof(path), "%s%carchive%cv2.5.3%cstartup_animation.json", emty_dir, PATH_SEP, PATH_SEP, PATH_SEP);
-    free(emty_dir);
+static char* get_exe_dir(void) {
+    static char path[1024];
+    #ifdef _WIN32
+    GetModuleFileNameA(NULL, path, sizeof(path));
+    char *last_slash = strrchr(path, '\\');
+    if (last_slash) *last_slash = '\0';
+    #else
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (len > 0) {
+        path[len] = '\0';
+        char *last_slash = strrchr(path, '/');
+        if (last_slash) *last_slash = '\0';
+    }
+    #endif
+    return path;
+}
 
+static char* read_animation_file(void) {
+    char *exe_dir = get_exe_dir();
+    char path[1024];
+    snprintf(path, sizeof(path), "%s%c..%c..%cv2.5.3%cstartup_animation.json", exe_dir, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
+    
     FILE *f = fopen(path, "rb");
     if (!f) {
         return NULL;

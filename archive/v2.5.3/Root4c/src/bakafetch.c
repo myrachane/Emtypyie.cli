@@ -205,7 +205,7 @@ void bakafetch_show(void) {
     snprintf(mem_line, sizeof(mem_line), "%s / %s", fmt_mem(used_ram), fmt_mem(total_ram));
 
     const char *labels[] = {"OS", "HOST", "KERNEL", "UPTIME", "SHELL", "CPU", "GPU", "MEMORY", "BUILD"};
-    const char *vals[] = {os, hn, "emtypyie cli v2.5.1", get_uptime(), "emtypyie", cpu_line, gpu, mem_line, get_build()};
+    const char *vals[] = {os, hn, "emtypyie cli v2.5.3", get_uptime(), "emtypyie", cpu_line, gpu, mem_line, get_build()};
     int n = sizeof(labels) / sizeof(labels[0]);
 
     char header[128];

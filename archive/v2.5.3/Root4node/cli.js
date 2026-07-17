@@ -541,7 +541,7 @@ function completer(line) {
   return [hits.length ? hits : [], line];
 }
 
-function interactive() {
+async function interactive() {
   process.title = 'emtypyie cli';
   const rl = readline.createInterface({
     input: process.stdin,
