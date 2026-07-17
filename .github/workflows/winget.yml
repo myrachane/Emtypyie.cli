@@ -13,7 +13,8 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION=$(node -p "require('./root4node/package.json').version")
+          DIR=$(ls -d archive/v* | sort -V | tail -1)
+          VERSION=$(node -p "require('./$DIR/Root4node/package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Download wingetcreate

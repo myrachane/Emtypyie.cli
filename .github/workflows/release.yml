@@ -13,46 +13,50 @@ jobs:
     runs-on: windows-latest
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
-    defaults:
-      run:
-        working-directory: root4node
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Extract version
+        id: version
+        shell: bash
+        run: |
+          echo "VTAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Cache pkg binaries
-        id: cache-pkg
         uses: actions/cache@v4
         with:
           path: ~\.pkg-cache
           key: pkg-cache-${{ runner.os }}
 
-      - run: npm ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Extract version
-        id: version
-        shell: bash
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        working-directory: archive/${{ steps.version.outputs.VTAG }}/Root4node
+        run: npm ci
 
-      - name: Build standalone executable
+      - name: Build standalone executable (pkg)
+        working-directory: archive/${{ steps.version.outputs.VTAG }}/Root4node
         run: npm run build
 
-      - name: Package ZIP
+      - name: Package Windows x64 ZIP
         shell: pwsh
         run: |
+          $vtag = "${{ steps.version.outputs.VTAG }}"
           $version = "${{ steps.version.outputs.VERSION }}"
-          Compress-Archive -Path dist\emtypyie.exe -DestinationPath dist\emtypyie-cli-windows-x64-$version.zip -Force
-          $hash = (Get-FileHash dist\emtypyie-cli-windows-x64-$version.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  dist\emtypyie-cli-windows-x64-$version.zip" | Out-File -FilePath dist\emtypyie-cli-windows-x64-$version.zip.sha256 -Encoding ascii
+          $src = "archive/$vtag/Root4node/dist/emtypyie.exe"
+          $zip = "archive/$vtag/Root4node/dist/emtypyie-cli-windows-x64-$version.zip"
+          Compress-Archive -Path $src -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  emtypyie-cli-windows-x64-$version.zip" | Out-File -FilePath "$zip.sha256" -Encoding ascii
 
       - name: Upload Node.js ZIP
         uses: actions/upload-artifact@v4
         with:
           name: node-build
-          path: root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
+          path: archive/${{ steps.version.outputs.VTAG }}/Root4node/dist/emtypyie-cli-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
           if-no-files-found: error
 
   build-c:
@@ -65,35 +69,55 @@ jobs:
       - name: Extract version
         id: version
         shell: bash
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          echo "VTAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-        working-directory: root4c
+      - name: Set up MSYS2 (mingw-w64 gcc/g++)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
 
       - name: Build C native executable
-        run: cmake --build build --config Release
-        working-directory: root4c
+        shell: msys2 {0}
+        run: |
+          cd "archive/${{ steps.version.outputs.VTAG }}/Root4c"
+          SRC=src
+          LIB=lib
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o main.o $SRC/main.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o shell.o $SRC/shell.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o theme.o $SRC/theme.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o util.o $SRC/util.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o fetch.o $SRC/fetch.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o download.o $SRC/download.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o project.o $SRC/project.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o bakafetch.o $SRC/bakafetch.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o runtime.o $SRC/runtime.c
+          gcc -std=c11 -Wall -Wextra -Wno-unused-parameter -I $SRC -I $LIB -c -o auth.o $SRC/auth.c
+          g++ -std=c++17 -Wall -Wextra -I $SRC -I $LIB -c -o larpino.o $SRC/larpino.cpp
+          gcc -c -I $LIB -o cJSON.o $LIB/cJSON.c
+          g++ -o emtypyie.exe main.o shell.o theme.o util.o fetch.o download.o project.o bakafetch.o runtime.o auth.o larpino.o cJSON.o -lwinhttp -lstdc++
 
-      - name: Package ZIP
+      - name: Package native Windows x64 ZIP
         shell: pwsh
         run: |
+          $vtag = "${{ steps.version.outputs.VTAG }}"
           $version = "${{ steps.version.outputs.VERSION }}"
-          $exe = "build\Release\emtypyie.exe"
-          if (-not (Test-Path $exe)) { $exe = "build\emtypyie.exe" }
-          Compress-Archive -Path $exe -DestinationPath "emtypyie-cli-native-windows-x64-$version.zip" -Force
-          $hash = (Get-FileHash "emtypyie-cli-native-windows-x64-$version.zip" -Algorithm SHA256).Hash.ToLower()
-          "$hash  emtypyie-cli-native-windows-x64-$version.zip" | Out-File -FilePath "emtypyie-cli-native-windows-x64-$version.zip.sha256" -Encoding ascii
-        working-directory: root4c
+          $src = "archive/$vtag/Root4c/emtypyie.exe"
+          $zip = "archive/$vtag/Root4c/emtypyie-cli-native-windows-x64-$version.zip"
+          Compress-Archive -Path $src -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  emtypyie-cli-native-windows-x64-$version.zip" | Out-File -FilePath "$zip.sha256" -Encoding ascii
 
       - name: Upload C native ZIP
         uses: actions/upload-artifact@v4
         with:
           name: c-build
-          path: root4c/emtypyie-cli-native-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
+          path: archive/${{ steps.version.outputs.VTAG }}/Root4c/emtypyie-cli-native-windows-x64-${{ steps.version.outputs.VERSION }}.zip*
           if-no-files-found: error
 
   create-release:
@@ -138,17 +162,18 @@ jobs:
   publish-npm:
     needs: build-node
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: root4node
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm publish || echo "npm publish skipped (version may already exist)"
+      - name: Install dependencies
+        working-directory: archive/${{ github.ref_name }}/Root4node
+        run: npm ci
+      - name: Publish to npm
+        working-directory: archive/${{ github.ref_name }}/Root4node
+        run: npm publish || echo "npm publish skipped (version may already exist)"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -156,6 +181,8 @@ jobs:
     needs: build-c
     runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Extract version
         id: version
         shell: bash
