@@ -1,4 +1,4 @@
-# Emtypyie.cli@v2.5.8
+# Emtypyie.cli@v2.5.8 Stable
 
 > Run emtypyie projects from your terminal with ease — the future runtime engine.
 
