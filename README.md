@@ -12,6 +12,7 @@ winget install myrachane.emtypyie-cli
 choco install emtypyie-cli
 
 # npm (all platforms) — SOON
+npm install emtypyie-cli
 ```
 
 ## Launch — C CLI
