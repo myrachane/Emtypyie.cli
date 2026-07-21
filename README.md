@@ -5,13 +5,13 @@
 ## Quick install
 
 ```sh
-# Windows (Winget) — C native build
+# Windows (Winget) — SOON
 winget install myrachane.emtypyie-cli
 
-# Windows (Chocolatey) — C native build
+# Windows (Chocolatey) — SOON
 choco install emtypyie-cli
 
-# npm (all platforms) — NOT PUBLISHED (npm token expired)
+# npm (all platforms) — SOON
 ```
 
 ## Launch — C CLI
