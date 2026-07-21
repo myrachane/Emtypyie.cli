@@ -142,7 +142,6 @@
   .statusDot { width: 7px; height: 7px; border-radius: 50%; background: transparent; transition: background .2s; }
   .statusBar.busy .statusDot { background: var(--accent); animation: pulse 1.5s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
-  .bannerLogo { display: block; width: 100%; max-width: 600px; height: auto; margin: 10px auto 18px; }
 
   /* ---------- input row ---------- */
   .inputWrap { position: relative; flex-shrink: 0; padding: 10px 22px 18px; }
@@ -870,40 +869,16 @@
     const s = getSession();
     if (s) pushEntry(s, '', line('This GUI must be launched through Electron (run "npm start" in the Root4gui folder). Opening index.html directly has no engine bridge, so commands cannot run.', 'err'));
   } else {
-    (async function showBanner(){
+    (function showBanner(){
       const s = tabs[0];
       if (!s) return;
       const welcome = s.consoleEl.querySelector('.welcome');
       if (welcome) welcome.remove();
-      const bannerSrcs = ['logo.png', 'logo.ico', 'logo.ino'];
-      let shown = false;
-      for (const src of bannerSrcs) {
-        try {
-          const resp = await fetch(src);
-          if (!resp.ok) continue;
-          if (src.endsWith('.ino')) {
-            const art = document.createElement('div');
-            art.className = 'out ok art';
-            art.style.whiteSpace = 'pre-wrap';
-            art.textContent = await resp.text();
-            s.consoleEl.appendChild(art);
-          } else {
-            const img = document.createElement('img');
-            img.className = 'bannerLogo';
-            img.src = src;
-            s.consoleEl.appendChild(img);
-          }
-          shown = true;
-          break;
-        } catch (_) {}
-      }
-      if (!shown) {
-        const art = document.createElement('div');
-        art.className = 'out ok art';
-        art.style.whiteSpace = 'pre-wrap';
-        art.textContent = STARTUP_BANNER;
-        s.consoleEl.appendChild(art);
-      }
+      const art = document.createElement('div');
+      art.className = 'out ok art';
+      art.style.whiteSpace = 'pre-wrap';
+      art.textContent = STARTUP_BANNER;
+      s.consoleEl.appendChild(art);
       s.consoleEl.scrollTop = s.consoleEl.scrollHeight;
     })();
   }

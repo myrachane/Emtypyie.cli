@@ -6,6 +6,7 @@ module.exports = {
     name: 'Emtypyie',
     executableName: 'emtypyie-gui',
     asar: true,
+    icon: './src/renderer/logo',
     extraResource: ['./resources/emtypyie.exe']
   },
   rebuildConfig: {},
