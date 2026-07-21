@@ -142,6 +142,7 @@
   .statusDot { width: 7px; height: 7px; border-radius: 50%; background: transparent; transition: background .2s; }
   .statusBar.busy .statusDot { background: var(--accent); animation: pulse 1.5s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+  .bannerLogo { display: block; max-width: 100%; height: auto; image-rendering: pixelated; margin-bottom: 12px; }
 
   /* ---------- input row ---------- */
   .inputWrap { position: relative; flex-shrink: 0; padding: 10px 22px 18px; }
@@ -874,17 +875,36 @@
       if (!s) return;
       const welcome = s.consoleEl.querySelector('.welcome');
       if (welcome) welcome.remove();
-      const art = document.createElement('div');
-      art.className = 'out ok art';
-      art.style.whiteSpace = 'pre-wrap';
       try {
-        const resp = await fetch('logo.ino');
-        if (resp.ok) art.textContent = await resp.text();
-        else art.textContent = STARTUP_BANNER;
+        const resp = await fetch('logo.ico');
+        if (resp.ok) {
+          const img = document.createElement('img');
+          img.className = 'bannerLogo';
+          img.src = 'logo.ico';
+          s.consoleEl.appendChild(img);
+        } else {
+          throw new Error('not found');
+        }
       } catch (_) {
-        art.textContent = STARTUP_BANNER;
+        try {
+          const resp = await fetch('logo.ino');
+          if (resp.ok) {
+            const art = document.createElement('div');
+            art.className = 'out ok art';
+            art.style.whiteSpace = 'pre-wrap';
+            art.textContent = await resp.text();
+            s.consoleEl.appendChild(art);
+          } else {
+            throw new Error('not found');
+          }
+        } catch (_2) {
+          const art = document.createElement('div');
+          art.className = 'out ok art';
+          art.style.whiteSpace = 'pre-wrap';
+          art.textContent = STARTUP_BANNER;
+          s.consoleEl.appendChild(art);
+        }
       }
-      s.consoleEl.appendChild(art);
       s.consoleEl.scrollTop = s.consoleEl.scrollHeight;
     })();
   }
