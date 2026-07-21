@@ -549,8 +549,7 @@
       splitTag: stage.querySelector('.splitTag'),
       cmdHistory: [], historyIndex: 0,
       suggestions: [], activeIndex: 0, paletteOpen: false,
-      draft: '',
-      _buf: ''
+      draft: ''
     };
     wireSession(session);
     tabs.push(session);
@@ -738,25 +737,31 @@
   }
 
   function processEngineOutput(session, txt){
-    session._buf += txt + '\n';
-    let idx;
-    while ((idx = session._buf.indexOf('__EMT_READY__')) !== -1) {
-      const before = session._buf.slice(0, idx);
-      if (before.trim()) {
-        const stripped = stripAnsi(before);
-        const lastEntry = session.consoleEl.lastChild;
-        if (lastEntry && lastEntry.dataset.waiting === '1') {
-          delete lastEntry.dataset.waiting;
-          const out = document.createElement('div');
-          out.className = 'out ok';
-          out.textContent = stripped;
-          lastEntry.appendChild(out);
-          session.consoleEl.scrollTop = session.consoleEl.scrollHeight;
-        }
-      }
-      session._buf = session._buf.slice(idx + 13);
-      if (session._buf[0] === '\n') session._buf = session._buf.slice(1);
+    const marker = '__EMT_READY__';
+    const mi = txt.indexOf(marker);
+    if (mi !== -1) {
+      if (mi > 0) appendOutput(session, txt.slice(0, mi));
+      const lastEntry = session.consoleEl.lastChild;
+      if (lastEntry) delete lastEntry.dataset.waiting;
+      const after = txt.slice(mi + marker.length);
+      if (after.trim()) appendOutput(session, after);
+    } else {
+      appendOutput(session, txt);
     }
+  }
+
+  function appendOutput(session, text) {
+    const stripped = stripAnsi(text);
+    const lastEntry = session.consoleEl.lastChild;
+    if (!lastEntry || lastEntry.dataset.waiting !== '1') return;
+    let out = lastEntry.querySelector('.out');
+    if (!out) {
+      out = document.createElement('div');
+      out.className = 'out ok';
+      lastEntry.appendChild(out);
+    }
+    out.textContent += (stripped || '') + '\n';
+    session.consoleEl.scrollTop = session.consoleEl.scrollHeight;
   }
 
   function executeLine(session, raw){
