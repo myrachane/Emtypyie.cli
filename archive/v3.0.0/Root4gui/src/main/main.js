@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -15,6 +15,7 @@ let mainWindow = null;
 const tabs = new Map(); // tabId -> Engine
 
 function createWindow() {
+  Menu.setApplicationMenu(null);
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 760,
@@ -22,6 +23,8 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#0c0712',
     title: 'Emtypyie — Baking Bread',
+    icon: path.join(__dirname, '..', 'renderer', 'logo.ico'),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
