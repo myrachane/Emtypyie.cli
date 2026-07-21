@@ -37,10 +37,10 @@ Direct commands also work without entering the shell, e.g. `emtypyie /list` or `
 
 ## Launch — GUI (Windows only)
 
-Download `emtypyie-gui-windows-x64-3.0.0-beta.zip` from the release, extract it anywhere, and run:
+Download `emtypyie.cli-Wrapper.zip` from the release, extract it anywhere, and run:
 
 ```sh
-emtypyie-gui.exe
+emtypyieWrapper.exe
 ```
 
 On first launch, a desktop shortcut is created automatically. The GUI opens a frameless window with a custom title bar (drag to move, grouped split/settings/win controls). Each tab runs its own C engine session with streaming output and a status bar.
@@ -103,11 +103,12 @@ Single-binary CLI written in C11/C++17, no runtime dependencies.
 - **CDN registry:** fetches project list and metadata from `cdn.emtypyie.in/dev`
 - **No args:** opens interactive shell (with startup boot animation)
 
-## GUI (Root4gui)
+## GUI (Root4gui) — emtypyie.cli-Wrapper
 
 Electron-based GUI wrapper for the C CLI, targeting Windows x64.
 
 - **Wrapper version:** 1.0.1
+- **Executable:** `emtypyieWrapper.exe`
 - **Engine:** Electron 32 + asar packaging
 - **Frameless window:** custom title bar with drag, 46x30px window buttons
 - **Multi-tab:** each tab spawns its own C engine process (child_process.spawn)
@@ -128,4 +129,4 @@ Each GitHub release ships three Windows artifacts:
 |-----|----------|--------|
 | `emtypyie-cli-windows-x64-3.0.0.zip` | `emtypyie.exe` | Node.js (pkg) — NOT PUBLISHED |
 | `emtypyie-cli-native-windows-x64-3.0.0.zip` | `emtypyie.exe` | C native build |
-| `emtypyie-gui-windows-x64-3.0.0-beta.zip` | `emtypyie-gui.exe` + runtime DLLs | Electron GUI wrapper |
+| `emtypyie.cli-Wrapper.zip` | `emtypyieWrapper.exe` + resources | Electron GUI wrapper |

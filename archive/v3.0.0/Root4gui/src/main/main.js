@@ -47,7 +47,7 @@ app.whenReady().then(() => {
       try {
         if (!fs.existsSync(envDir())) fs.mkdirSync(envDir(), { recursive: true });
         const desktop = path.join(os.homedir(), 'Desktop');
-        const shortcut = path.join(desktop, 'Emtypyie CLI.lnk');
+        const shortcut = path.join(desktop, 'emtypyie.cli-Wrapper.lnk');
         const target = process.execPath;
         const icon = path.join(__dirname, '..', 'renderer', 'logo.ico');
         if (!fs.existsSync(shortcut)) {
