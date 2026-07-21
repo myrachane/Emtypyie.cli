@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld('emt', {
 
   // Node-side update flow (GitHub API in the main process)
   checkUpdate: () => ipcRenderer.invoke('update:check'),
-  applyUpdate: (url) => ipcRenderer.invoke('update:apply', { url }),
+  applyUpdate: (url, type) => ipcRenderer.invoke('update:apply', { url, type }),
   onUpdateProgress: (cb) => ipcRenderer.on('update:progress', (_e, pct) => cb(pct)),
   onUpdateDone: (cb) => ipcRenderer.on('update:done', () => cb())
 });

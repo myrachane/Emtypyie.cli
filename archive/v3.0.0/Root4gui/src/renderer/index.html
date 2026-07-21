@@ -1111,9 +1111,9 @@
     const now = new Date().toLocaleString();
     if (res && res.updateAvailable) {
       pendingUpdate = res;
-      updateStatus.textContent = `Last checked: ${now}. Engine ${res.engineVersion} available.`;
+      updateStatus.textContent = `Last checked: ${now}. Wrapper ${res.wrapperVersion} available.`;
       upHeading.textContent = 'Update available';
-      upName.innerHTML = `Engine: <b>${res.engineVersion}</b> &nbsp;|&nbsp; Wrapper: <b>${res.wrapperVersion}</b>`;
+      upName.innerHTML = `Wrapper: <b>${res.wrapperVersion}</b> &nbsp;|&nbsp; Engine: <b>${res.engineVersion}</b>`;
       upNotes.textContent = res.notes || '(no release notes)';
       upActions.style.display = 'flex';
       upProgressWrap.classList.remove('show');
@@ -1139,12 +1139,14 @@
   document.getElementById('upClose').addEventListener('click', closeUpdatePopup);
   updatePopup.addEventListener('click', (e) => { if (e.target === updatePopup) closeUpdatePopup(); });
   document.getElementById('upNow').addEventListener('click', async () => {
-    if (!pendingUpdate || !pendingUpdate.url) { updatePopup.classList.remove('open'); return; }
+    const url = pendingUpdate?.wrapperUrl || pendingUpdate?.engineUrl;
+    if (!pendingUpdate || !url) { updatePopup.classList.remove('open'); return; }
     upActions.style.display = 'none';
     upProgressWrap.classList.add('show');
     upProgressFill.style.width = '0%';
     upProgressPct.textContent = '0%';
-    await window.emt.applyUpdate(pendingUpdate.url);
+    const type = pendingUpdate.wrapperUrl ? 'wrapper' : 'engine';
+    await window.emt.applyUpdate(url, type);
   });
 
   window.emt.onUpdateProgress((pct) => {

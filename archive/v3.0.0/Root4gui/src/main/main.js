@@ -128,6 +128,16 @@ app.whenReady().then(() => {
     });
   }
 
+  function httpsText(url) {
+    return new Promise((resolve, reject) => {
+      https.get(url, { headers: { 'User-Agent': 'Emtypyie-GUI' } }, (res) => {
+        let data = '';
+        res.on('data', (d) => (data += d));
+        res.on('end', () => resolve(data));
+      }).on('error', reject);
+    });
+  }
+
   function compareVersions(a, b) {
     const pa = a.replace(/^v/, '').split('.').map(Number);
     const pb = b.replace(/^v/, '').split('.').map(Number);
@@ -142,21 +152,28 @@ app.whenReady().then(() => {
     try {
       const rel = await httpsJson(`https://api.github.com/repos/${REPO}/releases/latest`);
       const engineVer = (rel.tag_name || '').replace(/^v/, '');
-      const isNewer = compareVersions(engineVer, WRAPPER_VERSION) > 0;
-      const asset = (rel.assets || []).find(a => /emtypyie-cli-native-windows-x64/i.test(a.name || ''));
+      let wrapperVer = WRAPPER_VERSION;
+      const wvAsset = (rel.assets || []).find(a => a.name === 'wrapper-version.txt');
+      if (wvAsset) {
+        try { wrapperVer = (await httpsText(wvAsset.browser_download_url)).trim(); } catch (_) {}
+      }
+      const isNewer = compareVersions(wrapperVer, WRAPPER_VERSION) > 0;
+      const engineAsset = (rel.assets || []).find(a => /emtypyie-cli-native-windows-x64/i.test(a.name || ''));
+      const wrapperAsset = (rel.assets || []).find(a => a.name === 'emtypyie.cli-Wrapper.zip');
       return {
         updateAvailable: isNewer,
         engineVersion: engineVer,
-        wrapperVersion: WRAPPER_VERSION,
+        wrapperVersion: wrapperVer,
         notes: rel.body || '',
-        url: asset ? asset.browser_download_url : null
+        engineUrl: engineAsset ? engineAsset.browser_download_url : null,
+        wrapperUrl: wrapperAsset ? wrapperAsset.browser_download_url : null
       };
     } catch (e) {
-      return { updateAvailable: false, engineVersion: '', wrapperVersion: WRAPPER_VERSION, notes: '', url: null, error: e.message };
+      return { updateAvailable: false, engineVersion: '', wrapperVersion: WRAPPER_VERSION, notes: '', engineUrl: null, wrapperUrl: null, error: e.message };
     }
   });
 
-  ipcMain.handle('update:apply', async (_e, { url }) => {
+  ipcMain.handle('update:apply', async (_e, { url, type }) => {
     return new Promise((resolve) => {
       if (!url) { resolve({ ok: false, msg: 'no asset url' }); return; }
       const tmp = path.join(envDir(), 'update.zip');
@@ -174,6 +191,14 @@ app.whenReady().then(() => {
               const AdmZip = require('adm-zip');
               const zip = new AdmZip(tmp);
               const entries = zip.getEntries();
+              if (type === 'wrapper') {
+                const appRoot = path.join(process.resourcesPath, '..');
+                zip.extractAllOverwrite(appRoot);
+                fs.unlinkSync(tmp);
+                if (mainWindow) mainWindow.webContents.send('update:progress', 100);
+                mainWindow && mainWindow.webContents.send('update:done');
+                return resolve({ ok: true });
+              }
               const target = enginePath();
               let wrote = false;
               for (const e of entries) {
