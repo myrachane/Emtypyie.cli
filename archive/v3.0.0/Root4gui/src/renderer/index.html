@@ -60,17 +60,25 @@
     font-size: 13px;
   }
   header .spacer { flex: 1; }
+  .headerActions { display: flex; align-items: center; gap: 2px; -webkit-app-region: no-drag; }
   .iconBtn {
-    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 6px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: transparent; border: 1px solid transparent; color: var(--muted);
-    cursor: pointer; transition: all .12s ease;
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; transition: background .12s ease, color .12s ease;
   }
-  .iconBtn:hover { background: var(--panel-3); border-color: var(--border); color: var(--accent); }
+  .iconBtn:hover { background: var(--panel-3); color: var(--accent); }
   .iconBtn svg { width: 16px; height: 16px; }
-  .winBtn { width: 36px; height: 28px; border-radius: 0; }
+  .winGroup { display: flex; align-items: center; margin-left: 4px; }
+  .winBtn {
+    width: 46px; height: 30px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; transition: background .12s ease;
+  }
+  .winBtn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
   .winBtn svg { width: 12px; height: 12px; }
-  .winClose:hover { background: #c00 !important; border-color: #c00 !important; color: #fff !important; }
+  .winClose:hover { background: #c00 !important; color: #fff !important; }
 
   /* ---------- tab bar ---------- */
   #tabbar { display: flex; align-items: stretch; gap: 0; padding: 6px 8px 0; background: var(--panel); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; scrollbar-width: thin; }
@@ -257,22 +265,25 @@
   <header>
     <span class="logo" id="headerTitle">EMTYPYIE.CLI@3.2.0</span>
     <span class="spacer"></span>
-    <button class="iconBtn" id="splitBtn" title="Toggle split view">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="8" height="16" rx="1"></rect>
-        <rect x="13" y="4" width="8" height="16" rx="1"></rect>
-      </svg>
-    </button>
-    <button class="iconBtn" id="settingsBtn" title="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-      </svg>
-    </button>
-    <span class="noDrag spacer"></span>
-    <button class="iconBtn winBtn" id="winMin" title="Minimize"><svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
-    <button class="iconBtn winBtn" id="winMax" title="Maximize"><svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
-    <button class="iconBtn winBtn winClose" id="winClose" title="Close"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+    <div class="headerActions">
+      <button class="iconBtn" id="splitBtn" title="Toggle split view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="8" height="16" rx="1"></rect>
+          <rect x="13" y="4" width="8" height="16" rx="1"></rect>
+        </svg>
+      </button>
+      <button class="iconBtn" id="settingsBtn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      <div class="winGroup">
+        <button class="winBtn" id="winMin" title="Minimize"><svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+        <button class="winBtn" id="winMax" title="Maximize"><svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+        <button class="winBtn winClose" id="winClose" title="Close"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+      </div>
+    </div>
   </header>
 
   <div id="tabbar"><button id="newTabBtn" title="New session">+</button></div>
