@@ -49,7 +49,10 @@
     background: linear-gradient(90deg, var(--panel), var(--panel-2));
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    -webkit-app-region: drag;
+    user-select: none;
   }
+  header .noDrag, header button { -webkit-app-region: no-drag; }
   header .logo {
     font-family: var(--pixel-font-display);
     font-weight: 400; letter-spacing: 1px; color: var(--accent);
@@ -65,6 +68,9 @@
   }
   .iconBtn:hover { background: var(--panel-3); border-color: var(--border); color: var(--accent); }
   .iconBtn svg { width: 16px; height: 16px; }
+  .winBtn { width: 36px; height: 28px; border-radius: 0; }
+  .winBtn svg { width: 12px; height: 12px; }
+  .winClose:hover { background: #c00 !important; border-color: #c00 !important; color: #fff !important; }
 
   /* ---------- tab bar ---------- */
   #tabbar { display: flex; align-items: stretch; gap: 0; padding: 6px 8px 0; background: var(--panel); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; scrollbar-width: thin; }
@@ -263,6 +269,10 @@
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
       </svg>
     </button>
+    <span class="noDrag spacer"></span>
+    <button class="iconBtn winBtn" id="winMin" title="Minimize"><svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+    <button class="iconBtn winBtn" id="winMax" title="Maximize"><svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+    <button class="iconBtn winBtn winClose" id="winClose" title="Close"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
   </header>
 
   <div id="tabbar"><button id="newTabBtn" title="New session">+</button></div>
@@ -894,6 +904,11 @@
       if (next) switchTab(next.id);
     }
   });
+
+  // ---------------- window controls ----------------
+  document.getElementById('winMin').addEventListener('click', () => window.emt?.winMin());
+  document.getElementById('winMax').addEventListener('click', () => window.emt?.winMax());
+  document.getElementById('winClose').addEventListener('click', () => window.emt?.winClose());
 
   // ---------------- split view ----------------
   document.getElementById('splitBtn').addEventListener('click', () => {

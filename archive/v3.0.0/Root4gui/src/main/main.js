@@ -21,10 +21,10 @@ function createWindow() {
     height: 760,
     minWidth: 860,
     minHeight: 600,
+    frame: false,
     backgroundColor: '#0c0712',
     title: 'Emtypyie — Baking Bread',
     icon: path.join(__dirname, '..', 'renderer', 'logo.ico'),
-    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -38,6 +38,11 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // ─── Custom title bar controls ───
+  ipcMain.on('win:min', () => mainWindow?.minimize());
+  ipcMain.on('win:max', () => { if (mainWindow?.isMaximized()) mainWindow.unmaximize(); else mainWindow?.maximize(); });
+  ipcMain.on('win:close', () => mainWindow?.close());
 
   // ─── IPC bridge: buttons 1:1 to C CLI commands ───
 

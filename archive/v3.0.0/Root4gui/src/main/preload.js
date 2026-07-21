@@ -3,6 +3,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('emt', {
+  winMin: () => ipcRenderer.send('win:min'),
+  winMax: () => ipcRenderer.send('win:max'),
+  winClose: () => ipcRenderer.send('win:close'),
   exec: (cmd, arg, opts) => ipcRenderer.invoke('engine:exec', { cmd, arg, opts }),
   openTab: (tabId, project) => ipcRenderer.invoke('tab:open', { tabId, project }),
   send: (tabId, cmd, arg) => ipcRenderer.send('tab:send', { tabId, cmd, arg }),
