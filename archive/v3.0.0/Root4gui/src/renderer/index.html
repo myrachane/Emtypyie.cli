@@ -430,40 +430,8 @@
   document.title = `Emtypyie.cli@${VERSION}`;
   document.getElementById('headerTitle').textContent = `EMTYPYIE.CLI@${VERSION}`;
 
-  // The Baking Bread loaf art (shown on /about).
-  const BREAD_ART = [
-    '░░                                                                  ',
-    '                                                ██████████████          ',
-    '                                        ████████▓▓▓▓██░░░░██▓▓████      ',
-    '                                ████████░░░░░░░░██▓▓██░░░░██▓▓▓▓▓▓██    ',
-    '                            ████░░██▓▓▓▓██░░░░░░██▓▓▓▓██░░██▓▓▓▓▓▓▓▓██  ',
-    '                        ████░░░░░░░░██▓▓▓▓██░░░░██▓▓▓▓██░░██▓▓▓▓▓▓▓▓██  ',
-    '                      ██▓▓▓▓██░░░░░░░░██▓▓▓▓██░░██▓▓▓▓██░░██▓▓▓▓▓▓██    ',
-    '                    ██▓▓▓▓▓▓▓▓██░░░░░░██▓▓▓▓██░░██▓▓▓▓██░░██▓▓▓▓▓▓██    ',
-    '                    ██▓▓▓▓▓▓▓▓▓▓██░░░░██▓▓▓▓██░░██▓▓▓▓▓▓██▓▓▓▓▓▓▓▓██    ',
-    '                    ██▓▓▓▓▓▓▓▓▓▓▓▓██░░██▓▓▓▓▓▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██      ',
-    '                    ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████        ',
-    '                    ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████            ',
-    '                      ████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████                ',
-    '                          ██████▓▓▓▓▓▓▓▓▓▓▓▓██████                      ',
-    '                                  ████████████                         '
-  ].join('\n');
-
-  // Startup banner: classic figlet "emtypyie" art + version/tagline (no bread).
-  const STARTUP_BANNER = String.raw`___________        __                         .__                  .__  .__
-\_   _____/ ______/  |_ ___.__. ______ ___.__.|__| ____       ____ |  | |__|
- |    __)_ /     \   __<   |  | \____ <   |  ||  |/ __ \    _/ ___
- |        \  Y Y  \  |  \___  | |  |_> >___  ||  \  ___/    \  \___|  |_|  |
-/_______  /__|_|  /__|  / ____| |   __// ____||__|\___  > /\ \___  >____/__|
-  EMTYPYIE CLI v3.0.0
-  "Baking Bread"
-
-  ─────────────────────────────────────────────
-  "code. create. conquer."
-  ─────────────────────────────────────────────
-
-  Type /help for available commands.
-  ─────────────────────────────────────────────`;
+  // Startup welcome message (shown once until engine sends its own output).
+  const WELCOME_LINE = 'Starting engine...';
 
   // Real projects served by the CDN registry (cdn.emtypyie.in/dev/meta.json).
   // /list fetches this live; these are kept in sync for suggestions/fork labels.
@@ -923,19 +891,6 @@
   if (typeof window.emt === 'undefined' || !window.emt.exec) {
     const s = getSession();
     if (s) pushEntry(s, '', line('This GUI must be launched through Electron (run "npm start" in the Root4gui folder). Opening index.html directly has no engine bridge, so commands cannot run.', 'err'));
-  } else {
-    (function showBanner(){
-      const s = tabs[0];
-      if (!s) return;
-      const welcome = s.consoleEl.querySelector('.welcome');
-      if (welcome) welcome.remove();
-      const art = document.createElement('div');
-      art.className = 'out ok art';
-      art.style.whiteSpace = 'pre-wrap';
-      art.textContent = STARTUP_BANNER;
-      s.consoleEl.appendChild(art);
-      s.consoleEl.scrollTop = s.consoleEl.scrollHeight;
-    })();
   }
 
   // ---------------- keyboard: tab cycling ----------------
@@ -1084,9 +1039,8 @@
   // ---------------- About section ----------------
   function fillAbout(){
     document.getElementById('aboutText').innerHTML =
-      `Emtypyie.cli@${VERSION}<br>` +
-      `Wrapper: v1.0.1<br><br>` +
-      `Codename: <b style="color:var(--accent)">Baking Bread</b><br><br>` +
+      `Wrapper: v1.0.1<br>` +
+      `Run <b style="color:var(--accent)">/about</b> in the terminal for engine version info.<br><br>` +
       `DESIGNED AND ENGINEERED BY EMTYPYIE<br>` +
       `Copyright 2026 EMTYPYIE. All rights reserved.`;
   }
