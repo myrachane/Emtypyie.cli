@@ -5,13 +5,13 @@
 ## Quick install
 
 ```sh
-# Windows (Winget) — SOON
+# Windows (Winget) — {Currently In Older Versions}
 winget install myrachane.emtypyie-cli
 
 # Windows (Chocolatey) — SOON
 choco install emtypyie-cli
 
-# npm (all platforms) — SOON
+# npm (all platforms) — v3.0.0 Not Released Yet
 npm install emtypyie-cli
 ```
 
